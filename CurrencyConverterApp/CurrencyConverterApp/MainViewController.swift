@@ -66,7 +66,9 @@ final class MainViewController: UIViewController {
                     configureSnapshot(with: exchangeRateList)
                 }
             } catch {
-                print(error.localizedDescription)
+                await MainActor.run {
+                    presentNetworkErrorAlert(for: error)
+                }
             }
         }
     }
@@ -78,6 +80,27 @@ final class MainViewController: UIViewController {
         self.datasource.apply(snapshot)
     }
     
+    private func presentNetworkErrorAlert(for error: Error) {
+        guard let networkError = error as? NetworkError else { return }
+        let message: String
+        
+        switch networkError {
+        case .invalidURL:
+            message = "유효하지 않은 URL입니다."
+        case .responseError:
+            message = "서버로부터 정상적인 응답을 받지 못했습니다."
+        case .decodingError:
+            message = "정보를 불러오는 데 실패했습니다."
+        }
+        
+        showAlert(title: "오류", message: message)
+    }
+    
+    private func showAlert(title: String, message: String) {
+        let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "확인", style: .default, handler: { _ in exit(0) }))
+        self.present(alert, animated: true)
+    }
 }
 
 extension MainViewController: UITableViewDelegate {
