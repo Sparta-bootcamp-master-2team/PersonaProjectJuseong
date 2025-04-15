@@ -9,11 +9,7 @@ import UIKit
 
 final class MainViewController: UIViewController {
     
-    private let tableView: UITableView = {
-        let tableView = UITableView()
-        tableView.register(ExchangeRateCell.self, forCellReuseIdentifier: ExchangeRateCell.reuseIdentifier)
-        return tableView
-    }()
+    private let tableView = UITableView()
     
     enum Section { case main }
     typealias Item = ExchangeRateInfo
@@ -40,7 +36,8 @@ final class MainViewController: UIViewController {
     }
     
     private func configureTableView() {
-        tableView.delegate = self
+        tableView.rowHeight = 50
+        tableView.register(ExchangeRateCell.self, forCellReuseIdentifier: ExchangeRateCell.reuseIdentifier)
         configureDataSource()
     }
     
@@ -100,11 +97,5 @@ final class MainViewController: UIViewController {
         let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
         alert.addAction(UIAlertAction(title: "확인", style: .default, handler: { _ in exit(0) }))
         self.present(alert, animated: true)
-    }
-}
-
-extension MainViewController: UITableViewDelegate {
-    func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
-        return 50
     }
 }
