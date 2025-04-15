@@ -7,15 +7,28 @@
 
 import Foundation
 
+/// 환율 정보를 나타내는 모델
+/// 통화 코드, 환율 값, 국가명을 포함
 struct ExchangeRateInfo: Hashable {
+    
+    /// 통화 코드 (예: "USD", "KRW")
     let currencyCode: String
+    
+    /// 통화에 해당하는 국가명 (미리 정의된 매핑 사용)
     var country: String {
         Self.currencyCountryMap[currencyCode] ?? "알 수 없음"
     }
+    
+    /// 환율 값 (예: 1350.123)
     let rate: Double
 }
 
+// MARK: - 국가명 매핑
+
 extension ExchangeRateInfo {
+    
+    /// 통화 코드와 국가명을 매핑한 정적 딕셔너리
+    /// ISO 통화 코드 기준
     static let currencyCountryMap: [String: String] = [
         "USD": "미국",
         "AED": "아랍에미리트",
@@ -180,5 +193,5 @@ extension ExchangeRateInfo {
         "ZAR": "남아프리카 공화국",
         "ZMW": "잠비아",
         "ZWL": "짐바브웨"
-        ]
+    ]
 }
