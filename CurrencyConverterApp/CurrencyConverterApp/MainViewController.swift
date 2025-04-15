@@ -9,7 +9,13 @@ import UIKit
 
 final class MainViewController: UIViewController {
     
-    private let tableView = UITableView()
+    private let tableView: UITableView = {
+        let tableView = UITableView()
+        tableView.backgroundColor = .white
+        tableView.rowHeight = 60
+        tableView.register(ExchangeRateCell.self, forCellReuseIdentifier: ExchangeRateCell.reuseIdentifier)
+        return tableView
+    }()
     
     enum Section { case main }
     typealias Item = ExchangeRateInfo
@@ -18,7 +24,7 @@ final class MainViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         setupUI()
-        configureTableView()
+        configureDataSource()
         loadExchangeRates()
     }
     
@@ -33,12 +39,6 @@ final class MainViewController: UIViewController {
         tableView.snp.makeConstraints {
             $0.edges.equalToSuperview()
         }
-    }
-    
-    private func configureTableView() {
-        tableView.rowHeight = 60
-        tableView.register(ExchangeRateCell.self, forCellReuseIdentifier: ExchangeRateCell.reuseIdentifier)
-        configureDataSource()
     }
     
     private func configureDataSource() {

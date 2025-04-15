@@ -52,6 +52,11 @@ final class ExchangeRateCell: UITableViewCell {
     }
     
     private func setupUI() {
+        self.contentView.backgroundColor = .white
+        setupConstraints()
+    }
+    
+    private func setupConstraints() {
         [labelStackView, exchangeRateLabel].forEach { contentView.addSubview($0) }
         
         labelStackView.snp.makeConstraints {
