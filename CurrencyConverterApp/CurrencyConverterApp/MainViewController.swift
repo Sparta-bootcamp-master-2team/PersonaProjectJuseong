@@ -15,6 +15,8 @@ final class MainViewController: UIViewController {
         let searchBar = UISearchBar()
         searchBar.placeholder = "통화 검색"
         searchBar.searchBarStyle = .minimal
+        searchBar.enablesReturnKeyAutomatically = false
+        searchBar.returnKeyType = .done
         searchBar.delegate = self
         return searchBar
     }()
@@ -28,10 +30,11 @@ final class MainViewController: UIViewController {
         return label
     }()
     
-    private let tableView: UITableView = {
+    private lazy var tableView: UITableView = {
         let tableView = UITableView()
         tableView.backgroundColor = .white
         tableView.rowHeight = 60
+        tableView.delegate = self
         tableView.register(ExchangeRateCell.self, forCellReuseIdentifier: ExchangeRateCell.reuseIdentifier)
         return tableView
     }()
@@ -132,9 +135,17 @@ final class MainViewController: UIViewController {
         alert.addAction(UIAlertAction(title: "확인", style: .default, handler: { _ in exit(0) }))
         self.present(alert, animated: true)
     }
+    
+    private func dismissKeyboard() {
+        view.endEditing(true)
+    }
 }
 
 extension MainViewController: UISearchBarDelegate {
+    func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
+        dismissKeyboard()
+    }
+    
     func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
         applyFilter(with: searchText)
     }
@@ -153,6 +164,10 @@ extension MainViewController: UISearchBarDelegate {
         
         configureSnapshot(with: filtered)
     }
-
 }
 
+extension MainViewController: UITableViewDelegate {
+    func scrollViewDidScroll(_ scrollView: UIScrollView) {
+        dismissKeyboard()
+    }
+}
