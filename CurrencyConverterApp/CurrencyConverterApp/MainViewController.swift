@@ -6,6 +6,7 @@
 //
 
 import UIKit
+import SnapKit
 
 final class MainViewController: UIViewController {
     
@@ -68,6 +69,8 @@ final class MainViewController: UIViewController {
     /// UI 요소들을 초기화하고 배치
     private func setupUI() {
         self.view.backgroundColor = .white
+        self.title = "환율 정보"
+        self.navigationController?.navigationBar.prefersLargeTitles = true
         setupConstraints()
     }
     
@@ -209,6 +212,12 @@ extension MainViewController: UISearchBarDelegate {
 // MARK: - UITableViewDelegate
 
 extension MainViewController: UITableViewDelegate {
+    
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        guard let exchangeRate = datasource.itemIdentifier(for: indexPath) else { return }
+        let nextVC = CalculatorViewController(exchangeRate: exchangeRate)
+        self.navigationController?.pushViewController(nextVC, animated: true)
+    }
     
     /// 테이블 뷰 스크롤 시 키보드 내림
     func scrollViewDidScroll(_ scrollView: UIScrollView) {
