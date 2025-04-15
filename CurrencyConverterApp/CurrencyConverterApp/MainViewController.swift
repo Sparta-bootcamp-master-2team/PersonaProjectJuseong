@@ -7,13 +7,23 @@
 
 import UIKit
 
-final class ViewController: UIViewController {
-
+final class MainViewController: UIViewController {
+    
     override func viewDidLoad() {
         super.viewDidLoad()
-        // Do any additional setup after loading the view.
+        loadExchangeRates()
     }
-
-
+    
+    private func loadExchangeRates() {
+        Task {
+            do {
+                let data = try await NetworkManager.shared.fetchExchangeRateData()
+                print(data)
+            } catch {
+                print(error.localizedDescription)
+            }
+        }
+    }
+    
 }
 
