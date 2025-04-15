@@ -6,6 +6,7 @@
 //
 
 import UIKit
+import SnapKit
 
 final class MainViewController: UIViewController {
     
@@ -213,7 +214,8 @@ extension MainViewController: UISearchBarDelegate {
 extension MainViewController: UITableViewDelegate {
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        let nextVC = CalculatorViewController()
+        guard let exchangeRate = datasource.itemIdentifier(for: indexPath) else { return }
+        let nextVC = CalculatorViewController(exchangeRate: exchangeRate)
         self.navigationController?.pushViewController(nextVC, animated: true)
     }
     
