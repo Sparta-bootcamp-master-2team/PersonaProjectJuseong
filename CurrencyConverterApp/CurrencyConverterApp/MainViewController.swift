@@ -9,11 +9,23 @@ import UIKit
 
 final class MainViewController: UIViewController {
     
-    private let searchBar: UISearchBar = {
+    private var exchangeRates: [ExchangeRateInfo] = []
+    
+    private lazy var searchBar: UISearchBar = {
         let searchBar = UISearchBar()
         searchBar.placeholder = "통화 검색"
-        searchBar.backgroundImage = UIImage() // border line 제거
+        searchBar.searchBarStyle = .minimal
+        searchBar.delegate = self
         return searchBar
+    }()
+    
+    private let emptyMessageLabel: UILabel = {
+        let label = UILabel()
+        label.text = "검색 결과 없음"
+        label.textAlignment = .center
+        label.textColor = .gray
+        label.font = .systemFont(ofSize: 16, weight: .regular)
+        return label
     }()
     
     private let tableView: UITableView = {
@@ -77,10 +89,10 @@ final class MainViewController: UIViewController {
     private func loadExchangeRates() {
         Task {
             do {
-                let exchangeRateList = try await NetworkManager.shared.fetchExchangeRateData()
+                exchangeRates = try await NetworkManager.shared.fetchExchangeRateData()
                 
                 await MainActor.run {
-                    configureSnapshot(with: exchangeRateList)
+                    configureSnapshot(with: exchangeRates)
                 }
             } catch {
                 await MainActor.run {
@@ -94,7 +106,9 @@ final class MainViewController: UIViewController {
         var snapshot = NSDiffableDataSourceSnapshot<Section, Item>()
         snapshot.appendSections([.main])
         snapshot.appendItems(items, toSection: .main)
-        self.datasource.apply(snapshot)
+        self.datasource.apply(snapshot, animatingDifferences: false)
+        
+        tableView.backgroundView = items.isEmpty ? emptyMessageLabel : nil
     }
     
     private func presentNetworkErrorAlert(for error: Error) {
@@ -119,3 +133,26 @@ final class MainViewController: UIViewController {
         self.present(alert, animated: true)
     }
 }
+
+extension MainViewController: UISearchBarDelegate {
+    func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
+        applyFilter(with: searchText)
+    }
+    
+    private func applyFilter(with keyword: String) {
+        let filtered: [ExchangeRateInfo]
+        
+        if keyword.isEmpty {
+            filtered = exchangeRates
+        } else {
+            filtered = exchangeRates.filter {
+                $0.currencyCode.lowercased().contains(keyword.lowercased()) ||
+                $0.country.contains(keyword)
+            }
+        }
+        
+        configureSnapshot(with: filtered)
+    }
+
+}
+
