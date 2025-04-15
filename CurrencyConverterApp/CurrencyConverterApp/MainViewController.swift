@@ -9,8 +9,17 @@ import UIKit
 
 final class MainViewController: UIViewController {
     
+    private let searchBar: UISearchBar = {
+        let searchBar = UISearchBar()
+        searchBar.placeholder = "통화 검색"
+        searchBar.backgroundImage = UIImage() // border line 제거
+        return searchBar
+    }()
+    
     private let tableView: UITableView = {
         let tableView = UITableView()
+        tableView.backgroundColor = .white
+        tableView.rowHeight = 60
         tableView.register(ExchangeRateCell.self, forCellReuseIdentifier: ExchangeRateCell.reuseIdentifier)
         return tableView
     }()
@@ -22,7 +31,7 @@ final class MainViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         setupUI()
-        configureTableView()
+        configureDataSource()
         loadExchangeRates()
     }
     
@@ -32,16 +41,18 @@ final class MainViewController: UIViewController {
     }
     
     private func setupConstraints() {
-        [tableView].forEach { self.view.addSubview($0) }
+        [searchBar ,tableView].forEach { self.view.addSubview($0) }
+        
+        searchBar.snp.makeConstraints {
+            $0.top.equalTo(self.view.safeAreaLayoutGuide)
+            $0.horizontalEdges.equalToSuperview()
+        }
         
         tableView.snp.makeConstraints {
-            $0.edges.equalToSuperview()
+            $0.top.equalTo(searchBar.snp.bottom)
+            $0.horizontalEdges.equalTo(self.view.safeAreaLayoutGuide)
+            $0.bottom.equalTo(self.view.safeAreaLayoutGuide)
         }
-    }
-    
-    private func configureTableView() {
-        tableView.delegate = self
-        configureDataSource()
     }
     
     private func configureDataSource() {
@@ -52,7 +63,13 @@ final class MainViewController: UIViewController {
                 withIdentifier: ExchangeRateCell.reuseIdentifier,
                 for: indexPath
             ) as! ExchangeRateCell
-            cell.configure(currency: item.currencyCode, exchangeRate: item.rate)
+            
+            cell.configure(
+                currency: item.currencyCode,
+                country: item.country,
+                exchangeRate: item.rate
+            )
+            
             return cell
         }
     }
@@ -100,11 +117,5 @@ final class MainViewController: UIViewController {
         let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
         alert.addAction(UIAlertAction(title: "확인", style: .default, handler: { _ in exit(0) }))
         self.present(alert, animated: true)
-    }
-}
-
-extension MainViewController: UITableViewDelegate {
-    func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
-        return 50
     }
 }
