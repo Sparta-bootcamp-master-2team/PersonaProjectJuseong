@@ -10,7 +10,8 @@ import Foundation
 struct ExchangeRatesDTO: Decodable {
     let rates: [String: Double]
     
-    var exchangeRateList: [ExchangeRate] {
-        rates.map { ExchangeRate(currencyCode: $0.key, rate: $0.value) }
+    var exchangeRateList: [ExchangeRateInfo] {
+        rates.map { ExchangeRateInfo(currencyCode: $0.key, rate: $0.value) }
+            .sorted { $0.currencyCode < $1.currencyCode }
     }
 }
