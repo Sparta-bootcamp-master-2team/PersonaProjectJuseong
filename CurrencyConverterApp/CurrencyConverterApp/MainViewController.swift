@@ -36,7 +36,7 @@ final class MainViewController: UIViewController {
     }
     
     private func configureTableView() {
-        tableView.rowHeight = 50
+        tableView.rowHeight = 60
         tableView.register(ExchangeRateCell.self, forCellReuseIdentifier: ExchangeRateCell.reuseIdentifier)
         configureDataSource()
     }
@@ -49,7 +49,13 @@ final class MainViewController: UIViewController {
                 withIdentifier: ExchangeRateCell.reuseIdentifier,
                 for: indexPath
             ) as! ExchangeRateCell
-            cell.configure(currency: item.currencyCode, exchangeRate: item.rate)
+            
+            cell.configure(
+                currency: item.currencyCode,
+                country: item.country,
+                exchangeRate: item.rate
+            )
+            
             return cell
         }
     }

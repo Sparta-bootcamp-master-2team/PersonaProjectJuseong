@@ -12,17 +12,32 @@ final class ExchangeRateCell: UITableViewCell {
     
     static let reuseIdentifier = "ExchangeRateCell"
     
+    private lazy var labelStackView: UIStackView = {
+        let stackView = UIStackView(arrangedSubviews: [currencyLable, countryLabel])
+        stackView.axis = .vertical
+        stackView.spacing = 4
+        return stackView
+    }()
+    
     private let currencyLable: UILabel = {
         let label = UILabel()
-        label.font = .systemFont(ofSize: 18, weight: .medium)
+        label.font = .systemFont(ofSize: 16, weight: .medium)
         label.textColor = .black
+        return label
+    }()
+    
+    private let countryLabel: UILabel = {
+        let label = UILabel()
+        label.font = .systemFont(ofSize: 14, weight: .regular)
+        label.textColor = .gray
         return label
     }()
     
     private let exchangeRateLabel: UILabel = {
         let label = UILabel()
-        label.font = .systemFont(ofSize: 18, weight: .regular)
+        label.font = .systemFont(ofSize: 16, weight: .regular)
         label.textColor = .black
+        label.textAlignment = .right
         return label
     }()
     
@@ -37,21 +52,24 @@ final class ExchangeRateCell: UITableViewCell {
     }
     
     private func setupUI() {
-        [currencyLable, exchangeRateLabel].forEach { contentView.addSubview($0) }
+        [labelStackView, exchangeRateLabel].forEach { contentView.addSubview($0) }
         
-        currencyLable.snp.makeConstraints {
-            $0.leading.equalToSuperview().inset(20)
+        labelStackView.snp.makeConstraints {
+            $0.leading.equalToSuperview().inset(16)
             $0.centerY.equalToSuperview()
         }
         
         exchangeRateLabel.snp.makeConstraints {
-            $0.trailing.equalToSuperview().inset(20)
+            $0.leading.greaterThanOrEqualTo(labelStackView.snp.trailing).offset(16)
+            $0.trailing.equalToSuperview().inset(16)
+            $0.width.equalTo(120)
             $0.centerY.equalToSuperview()
         }
     }
     
-    func configure(currency: String, exchangeRate: Double) {
+    func configure(currency: String, country:String, exchangeRate: Double) {
         currencyLable.text = currency
+        countryLabel.text = country
         exchangeRateLabel.text = String(format: "%.4f", exchangeRate)
     }
 }
