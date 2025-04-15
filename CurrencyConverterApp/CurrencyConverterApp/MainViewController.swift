@@ -9,6 +9,13 @@ import UIKit
 
 final class MainViewController: UIViewController {
     
+    private let searchBar: UISearchBar = {
+        let searchBar = UISearchBar()
+        searchBar.placeholder = "통화 검색"
+        searchBar.backgroundImage = UIImage() // border line 제거
+        return searchBar
+    }()
+    
     private let tableView: UITableView = {
         let tableView = UITableView()
         tableView.backgroundColor = .white
@@ -34,10 +41,17 @@ final class MainViewController: UIViewController {
     }
     
     private func setupConstraints() {
-        [tableView].forEach { self.view.addSubview($0) }
+        [searchBar ,tableView].forEach { self.view.addSubview($0) }
+        
+        searchBar.snp.makeConstraints {
+            $0.top.equalTo(self.view.safeAreaLayoutGuide)
+            $0.horizontalEdges.equalToSuperview()
+        }
         
         tableView.snp.makeConstraints {
-            $0.edges.equalToSuperview()
+            $0.top.equalTo(searchBar.snp.bottom)
+            $0.horizontalEdges.equalTo(self.view.safeAreaLayoutGuide)
+            $0.bottom.equalTo(self.view.safeAreaLayoutGuide)
         }
     }
     
