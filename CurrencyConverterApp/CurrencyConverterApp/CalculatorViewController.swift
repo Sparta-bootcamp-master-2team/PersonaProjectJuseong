@@ -52,7 +52,7 @@ final class CalculatorViewController: UIViewController {
         let textField = UITextField()
         textField.borderStyle = .roundedRect
         textField.keyboardType = .decimalPad
-        textField.placeholder = "금액을 입력하세요"
+        textField.placeholder = "달러(USD)를 입력하세요"
         textField.textAlignment = .center
         return textField
     }()
@@ -130,12 +130,44 @@ final class CalculatorViewController: UIViewController {
     
     @objc
     private func convertButtonDidTap() {
+        guard
+            let inputText = amountTextField.text,
+            let inputAmount = validateInput(inputText)
+        else { return }
+        
+        fetchAndUpdateExchangeRate(for: inputAmount)
+    }
+    
+    private func validateInput(_ text: String) -> Double? {
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        
+        if trimmed.isEmpty {
+            showAlert(title: "오류", message: "금액을 입력해주세요")
+            return nil
+        }
+        
+        guard let amount = Double(trimmed) else {
+            showAlert(title: "오류", message: "올바른 숫자를 입력해주세요")
+            return nil
+        }
+        
+        return amount
+    }
+    
+    private func showAlert(title: String, message: String) {
+        let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "확인", style: .default))
+        self.present(alert, animated: true)
+    }
+    
+    private func fetchAndUpdateExchangeRate(for amount: Double) {
         Task {
             do {
                 let allRates = try await NetworkManager.shared.fetchExchangeRateData()
-                let matchedRate = allRates.filter { $0.currencyCode == exchangeRate.currencyCode }
+                let matchedRate = allRates.first { $0.currencyCode == exchangeRate.currencyCode }
+                
                 await MainActor.run {
-                    updateUI(with: matchedRate)
+                    updateResultLabel(rate: matchedRate?.rate, amount: amount)
                 }
             } catch {
                 print(error.localizedDescription)
@@ -143,16 +175,13 @@ final class CalculatorViewController: UIViewController {
         }
     }
     
-    private func updateUI(with exchangeRates: [ExchangeRateInfo]) {
-        guard
-            let rate = exchangeRates.first?.rate,
-            let inputAmount = Double(amountTextField.text ?? "0")
-        else { return }
+    private func updateResultLabel(rate: Double?, amount: Double) {
+        guard let rate else { return }
 
-        let formattedResult = String(format: "%.2f", rate * inputAmount)
-        let formattedInput = String(format: "%.2f", inputAmount)
+        let formattedAmount = String(format: "%.2f", amount)
+        let formattedResult = String(format: "%.2f", rate * amount)
 
-        resultLabel.text = "$\(formattedInput) → \(formattedResult) \(exchangeRate.currencyCode)"
+        resultLabel.text = "$\(formattedAmount) → \(formattedResult) \(exchangeRate.currencyCode)"
     }
 
 }
