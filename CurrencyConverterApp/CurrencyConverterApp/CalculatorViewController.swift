@@ -147,17 +147,11 @@ final class CalculatorViewController: UIViewController {
         }
         
         guard let amount = Double(trimmed) else {
-            showAlert(title: "오류", message: "올바른 숫자를 입력해주세요")
+            showAlert(title: "입력값 오류", message: "올바른 숫자를 입력해주세요")
             return nil
         }
         
         return amount
-    }
-    
-    private func showAlert(title: String, message: String) {
-        let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
-        alert.addAction(UIAlertAction(title: "확인", style: .default))
-        self.present(alert, animated: true)
     }
     
     private func fetchAndUpdateExchangeRate(for amount: Double) {
@@ -170,7 +164,7 @@ final class CalculatorViewController: UIViewController {
                     updateResultLabel(rate: matchedRate?.rate, amount: amount)
                 }
             } catch {
-                print(error.localizedDescription)
+                showNetworkErrorAlert(for: error)
             }
         }
     }
