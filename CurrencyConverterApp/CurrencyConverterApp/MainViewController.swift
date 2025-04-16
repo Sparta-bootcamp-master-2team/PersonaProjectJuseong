@@ -125,7 +125,7 @@ final class MainViewController: UIViewController {
                 }
             } catch {
                 await MainActor.run {
-                    presentNetworkErrorAlert(for: error)
+                    showNetworkErrorAlert(for: error)
                 }
             }
         }
@@ -142,32 +142,6 @@ final class MainViewController: UIViewController {
         
         // 검색 결과가 없을 경우 빈 메시지 라벨을 배경으로 설정
         tableView.backgroundView = items.isEmpty ? emptyMessageLabel : nil
-    }
-    
-    // MARK: - Error Handling
-    
-    /// 네트워크 오류에 따른 Alert 표시
-    private func presentNetworkErrorAlert(for error: Error) {
-        guard let networkError = error as? NetworkError else { return }
-        let message: String
-        
-        switch networkError {
-        case .invalidURL:
-            message = "유효하지 않은 URL입니다."
-        case .responseError:
-            message = "서버로부터 정상적인 응답을 받지 못했습니다."
-        case .decodingError:
-            message = "정보를 불러오는 데 실패했습니다."
-        }
-        
-        showAlert(title: "오류", message: message)
-    }
-    
-    /// 공통 Alert 표시 함수
-    private func showAlert(title: String, message: String) {
-        let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
-        alert.addAction(UIAlertAction(title: "확인", style: .default, handler: { _ in exit(0) }))
-        self.present(alert, animated: true)
     }
     
     // MARK: - Utility
@@ -213,6 +187,7 @@ extension MainViewController: UISearchBarDelegate {
 
 extension MainViewController: UITableViewDelegate {
     
+    /// 셀 선택 시 CalculatorViewController로 이동
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         guard let exchangeRate = datasource.itemIdentifier(for: indexPath) else { return }
         let nextVC = CalculatorViewController(exchangeRate: exchangeRate)
