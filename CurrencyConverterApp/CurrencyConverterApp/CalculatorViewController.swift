@@ -57,7 +57,7 @@ final class CalculatorViewController: UIViewController {
         return textField
     }()
     
-    private let convertButton: UIButton = {
+    private lazy var convertButton: UIButton = {
         let button = UIButton()
         button.setTitle("환율 계산", for: .normal)
         button.setTitleColor(.white, for: .normal)
@@ -65,6 +65,7 @@ final class CalculatorViewController: UIViewController {
         button.backgroundColor = .systemBlue
         button.tintColor = .white
         button.layer.cornerRadius = 8
+        button.addTarget(self, action: #selector(convertButtonDidTap), for: .touchUpInside)
         return button
     }()
     
@@ -126,4 +127,32 @@ final class CalculatorViewController: UIViewController {
         currencyLable.text = exchangeRate.currencyCode
         countryLabel.text = exchangeRate.country
     }
+    
+    @objc
+    private func convertButtonDidTap() {
+        Task {
+            do {
+                let allRates = try await NetworkManager.shared.fetchExchangeRateData()
+                let matchedRate = allRates.filter { $0.currencyCode == exchangeRate.currencyCode }
+                await MainActor.run {
+                    updateUI(with: matchedRate)
+                }
+            } catch {
+                print(error.localizedDescription)
+            }
+        }
+    }
+    
+    private func updateUI(with exchangeRates: [ExchangeRateInfo]) {
+        guard
+            let rate = exchangeRates.first?.rate,
+            let inputAmount = Double(amountTextField.text ?? "0")
+        else { return }
+
+        let formattedResult = String(format: "%.2f", rate * inputAmount)
+        let formattedInput = String(format: "%.2f", inputAmount)
+
+        resultLabel.text = "$\(formattedInput) → \(formattedResult) \(exchangeRate.currencyCode)"
+    }
+
 }
