@@ -83,6 +83,7 @@ final class CalculatorViewController: UIViewController {
         super.viewDidLoad()
         setupUI()
         configureUI()
+        setupDismissKeyboardGesture()
     }
     
     private func setupUI() {
@@ -177,5 +178,15 @@ final class CalculatorViewController: UIViewController {
 
         resultLabel.text = "$\(formattedAmount) → \(formattedResult) \(exchangeRate.currencyCode)"
     }
+    
+    private func setupDismissKeyboardGesture() {
+        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(dismissKeyboard))
+        tapGesture.cancelsTouchesInView = false
+        view.addGestureRecognizer(tapGesture)
+    }
 
+    @objc
+    private func dismissKeyboard() {
+        view.endEditing(true)
+    }
 }
