@@ -187,6 +187,7 @@ extension MainViewController: UISearchBarDelegate {
 
 extension MainViewController: UITableViewDelegate {
     
+    /// 셀 선택 시 CalculatorViewController로 이동
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         guard let exchangeRate = datasource.itemIdentifier(for: indexPath) else { return }
         let nextVC = CalculatorViewController(exchangeRate: exchangeRate)
