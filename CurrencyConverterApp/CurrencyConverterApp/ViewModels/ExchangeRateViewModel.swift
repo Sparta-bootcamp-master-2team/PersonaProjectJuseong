@@ -76,13 +76,15 @@ final class ExchangeRateViewModel: ViewModelProtocol {
     
     /// 검색어에 따른 환율 데이터 필터링을 수행
     private func filterExchangeRates(with keyword: String) {
+        let trimmed = keyword.trimmingCharacters(in: .whitespacesAndNewlines)
+        
         let filtered: [ExchangeRateInfo]
-        if keyword.isEmpty {
+        if trimmed.isEmpty {
             filtered = allExchangeRates
         } else {
             filtered = allExchangeRates.filter {
-                $0.currencyCode.lowercased().contains(keyword.lowercased()) ||
-                $0.country.lowercased().contains(keyword.lowercased())
+                $0.currencyCode.localizedCaseInsensitiveContains(trimmed) ||
+                $0.country.localizedCaseInsensitiveContains(trimmed)
             }
         }
         // 필터링 결과 업데이트
