@@ -10,19 +10,26 @@ import Foundation
 /// ExchangeRate 화면에서 사용하는 상태 정의
 enum ExchangeRateState {
     case exchangeRates([ExchangeRateInfo])
-    case errorMessage(Error)
+    case networkError(Error)
 }
 
 /// ExchangeRate 화면에서 발생 가능한 액션 정의
 enum ExchangeRateAction {
-    case load              // 환율 데이터 전체 로드
-    case filter(String)    // 검색어를 통한 필터링
+    case fetch              // 환율 데이터 전체 로드
+    case applyFilter(String)    // 검색어를 통한 필터링
 }
 
 @MainActor
 final class ExchangeRateViewModel: ViewModelProtocol {
+    // MARK: - Typealias
+
     typealias Action = ExchangeRateAction
     typealias State = ExchangeRateState
+    
+    // MARK: - Properties
+    
+    /// 네트워크에서 불러온 전체 환율 데이터를 저장
+    private var allExchangeRates: [ExchangeRateInfo] = []
     
     /// 현재 상태 (변경 시 onStateChange 호출)
     private(set) var state: ExchangeRateState {
@@ -30,32 +37,35 @@ final class ExchangeRateViewModel: ViewModelProtocol {
             onStateChange?(state)
         }
     }
-    
-    /// 네트워크에서 불러온 전체 환율 데이터를 저장
-    private var allExchangeRates: [ExchangeRateInfo] = []
-    
-    init() {
-        self.state = .exchangeRates([]) // 초기 상태: 빈 환율 정보
-        bindAction()
-    }
-    
+        
     /// View에서 전달받은 액션을 처리하는 클로저
     private(set) var action: ((ExchangeRateAction) -> Void)?
     
     /// View에 상태 변경을 알리기 위한 클로저
     var onStateChange: ((ExchangeRateState) -> Void)?
     
+    // MARK: - Init
+    
+    init() {
+        self.state = .exchangeRates([]) // 초기 상태: 빈 환율 정보
+        bindAction()
+    }
+    
+    // MARK: - Binding
+    
     private func bindAction() {
         // View에서 액션을 전달받으면 handle(action:)을 호출
         self.action = { [weak self] action in
             switch action {
-            case .load:
+            case .fetch:
                 self?.loadExchangeRates()
-            case .filter(let keyword):
+            case .applyFilter(let keyword):
                 self?.filterExchangeRates(with: keyword)
             }
         }
     }
+    
+    // MARK: - Logic
     
     /// 네트워크를 통해 전체 환율 데이터를 불러와 상태를 업데이트
     nonisolated private func loadExchangeRates() {
@@ -68,7 +78,7 @@ final class ExchangeRateViewModel: ViewModelProtocol {
                 }
             } catch {
                 await MainActor.run {
-                    state = .errorMessage(error)
+                    state = .networkError(error)
                 }
             }
         }

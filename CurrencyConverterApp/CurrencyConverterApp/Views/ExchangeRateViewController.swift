@@ -70,7 +70,7 @@ final class ExchangeRateViewController: UIViewController {
         setupUI()
         configureDataSource()
         bindViewModel()
-        viewModel.action?(.load) // 데이터 로드 액션 전달
+        viewModel.action?(.fetch) // 데이터 로드 액션 전달
     }
     
     // MARK: - UI Setup
@@ -129,8 +129,8 @@ final class ExchangeRateViewController: UIViewController {
             switch state {
             case .exchangeRates(let exchangeInfos):
                 self?.configureSnapshot(with: exchangeInfos)
-            case .errorMessage(let error):
-                self?.showNetworkErrorAlert(for: error) // UIViewController 확장 구현
+            case .networkError(let error):
+                self?.showNetworkErrorAlert(for: error)
             }
         }
     }
@@ -167,7 +167,7 @@ extension ExchangeRateViewController: UISearchBarDelegate {
     /// 검색어 변경 시 필터링 적용
     func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
         // 검색 입력 시 필터링 액션 전달
-        viewModel.action?(.filter(searchText))
+        viewModel.action?(.applyFilter(searchText))
     }
 }
 
@@ -177,7 +177,8 @@ extension ExchangeRateViewController: UITableViewDelegate {
     /// 셀 선택 시 CalculatorViewController로 이동
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         guard let exchangeRate = datasource.itemIdentifier(for: indexPath) else { return }
-        let nextVC = CalculatorViewController(exchangeRate: exchangeRate)
+        let nextVM = CalculatorViewModel(exchangeRate: exchangeRate)
+        let nextVC = CalculatorViewController(viewModel: nextVM)
         navigationController?.pushViewController(nextVC, animated: true)
     }
     
