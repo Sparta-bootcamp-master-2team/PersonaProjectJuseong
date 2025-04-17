@@ -21,6 +21,16 @@ struct ExchangeRateInfo: Hashable {
     
     /// 환율 값 (예: 1350.123)
     let rate: Double
+    
+    var isFavorite: Bool = false
+}
+
+extension ExchangeRateInfo {
+    init(entity: ExchangeRateEntity) {
+        self.currencyCode = entity.currency ?? "알 수 없음"
+        self.rate = entity.rate
+        self.isFavorite = entity.isFavorite
+    }
 }
 
 // MARK: - 국가명 매핑

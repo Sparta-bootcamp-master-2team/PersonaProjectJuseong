@@ -58,7 +58,7 @@ final class ExchangeRateViewModel: ViewModelProtocol {
         self.action = { [weak self] action in
             switch action {
             case .fetch:
-                self?.loadExchangeRates()
+                self?.fetchExchangeRates()
             case .applyFilter(let keyword):
                 self?.filterExchangeRates(with: keyword)
             }
@@ -67,11 +67,30 @@ final class ExchangeRateViewModel: ViewModelProtocol {
     
     // MARK: - Logic
     
+    private func fetchExchangeRates() {
+        let nextUpdateUnix = CoreDataManager.shared.fetchNextUpdateTime()
+        let currentUnix = Int64(Date().timeIntervalSince1970)
+
+        if nextUpdateUnix == nil || currentUnix >= nextUpdateUnix! {
+            print("네트워크로 환율 데이터 가져오는 중")
+            fetchFromNetwork()
+        } else {
+            print("CoreData에서 환율 데이터 불러오기")
+            fetchFromCoreData()
+        }
+    }
+    
     /// 네트워크를 통해 전체 환율 데이터를 불러와 상태를 업데이트
-    nonisolated private func loadExchangeRates() {
+    nonisolated private func fetchFromNetwork() {
         Task {
             do {
                 let response = try await NetworkManager.shared.fetchExchangeRateData()
+                CoreDataManager.shared.saveExchangeRate(exchangeRates: response.exchangeRateList)
+                CoreDataManager.shared.saveTimeStamp(
+                    last: response.timeLastUpdateUnix,
+                    next: response.timeNextUpdateUnix
+                )
+                print(response.timeNextUpdateUnix)
                 await MainActor.run {
                     allExchangeRates = response.exchangeRateList
                     state = .exchangeRates(response.exchangeRateList)
@@ -82,6 +101,13 @@ final class ExchangeRateViewModel: ViewModelProtocol {
                 }
             }
         }
+    }
+    
+    private func fetchFromCoreData() {
+        let entity = CoreDataManager.shared.fetchExchangeRate()
+        let rates = entity.map { ExchangeRateInfo(entity: $0) }
+        allExchangeRates = rates
+        state = .exchangeRates(rates)
     }
     
     /// 검색어에 따른 환율 데이터 필터링을 수행
