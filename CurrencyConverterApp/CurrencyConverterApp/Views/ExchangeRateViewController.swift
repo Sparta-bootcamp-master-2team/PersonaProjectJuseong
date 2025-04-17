@@ -1,5 +1,5 @@
 //
-//  MainViewController.swift
+//  ExchangeRateViewController.swift
 //  CurrencyConverterApp
 //
 //  Created by 박주성 on 4/14/25.
@@ -8,7 +8,7 @@
 import UIKit
 import SnapKit
 
-final class MainViewController: UIViewController {
+final class ExchangeRateViewController: UIViewController {
     
     // MARK: - Properties
     
@@ -154,7 +154,7 @@ final class MainViewController: UIViewController {
 
 // MARK: - UISearchBarDelegate
 
-extension MainViewController: UISearchBarDelegate {
+extension ExchangeRateViewController: UISearchBarDelegate {
     
     /// 검색 버튼 클릭 시 키보드 내림
     func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
@@ -185,7 +185,7 @@ extension MainViewController: UISearchBarDelegate {
 
 // MARK: - UITableViewDelegate
 
-extension MainViewController: UITableViewDelegate {
+extension ExchangeRateViewController: UITableViewDelegate {
     
     /// 셀 선택 시 CalculatorViewController로 이동
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
