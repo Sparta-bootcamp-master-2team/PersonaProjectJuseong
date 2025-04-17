@@ -71,10 +71,10 @@ final class ExchangeRateViewModel: ViewModelProtocol {
     nonisolated private func loadExchangeRates() {
         Task {
             do {
-                let rates = try await NetworkManager.shared.fetchExchangeRateData()
+                let response = try await NetworkManager.shared.fetchExchangeRateData()
                 await MainActor.run {
-                    allExchangeRates = rates
-                    state = .exchangeRates(rates)
+                    allExchangeRates = response.exchangeRateList
+                    state = .exchangeRates(response.exchangeRateList)
                 }
             } catch {
                 await MainActor.run {
