@@ -89,7 +89,7 @@ final class CalculatorViewController: UIViewController {
         setupUI()
         bindViewModel()
         setupDismissKeyboardGesture()
-        cofigureCurrencyInfoUI(with: viewModel.exchangeRate)
+        configureCurrencyInfoUI(with: viewModel.exchangeRate)
     }
     
     // MARK: - UI Setup
@@ -145,7 +145,7 @@ final class CalculatorViewController: UIViewController {
         }
     }
     
-    private func cofigureCurrencyInfoUI(with exchangeRate: ExchangeRateInfo) {
+    private func configureCurrencyInfoUI(with exchangeRate: ExchangeRateInfo) {
         currencyLabel.text = exchangeRate.currencyCode
         countryLabel.text = exchangeRate.country
     }

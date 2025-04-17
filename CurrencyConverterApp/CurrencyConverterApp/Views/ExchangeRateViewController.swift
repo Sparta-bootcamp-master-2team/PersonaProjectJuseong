@@ -49,6 +49,7 @@ final class ExchangeRateViewController: UIViewController {
         tableView.backgroundColor = .white
         tableView.rowHeight = 60
         tableView.delegate = self
+        tableView.keyboardDismissMode = .onDrag
         tableView.register(ExchangeRateCell.self, forCellReuseIdentifier: ExchangeRateCell.reuseIdentifier)
         return tableView
     }()
@@ -180,10 +181,5 @@ extension ExchangeRateViewController: UITableViewDelegate {
         let nextVM = CalculatorViewModel(exchangeRate: exchangeRate)
         let nextVC = CalculatorViewController(viewModel: nextVM)
         navigationController?.pushViewController(nextVC, animated: true)
-    }
-    
-    /// 테이블 뷰 스크롤 시 키보드 내림
-    func scrollViewDidScroll(_ scrollView: UIScrollView) {
-        dismissKeyboard()
     }
 }
