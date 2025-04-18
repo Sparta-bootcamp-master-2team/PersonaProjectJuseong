@@ -31,6 +31,16 @@ final class CoreDataManager {
     }
     
     func saveExchangeRate(exchangeRates: [ExchangeRateInfo]) {
+        // 기존 데이터 삭제
+        let request: NSFetchRequest<NSFetchRequestResult> = ExchangeRateEntity.fetchRequest()
+        let deleteRequest = NSBatchDeleteRequest(fetchRequest: request)
+        
+        do {
+            try context.execute(deleteRequest)
+        } catch {
+            print("기존 ExchangeRate 삭제 실패: \(error)")
+        }
+        
         exchangeRates.forEach {
             let entity = ExchangeRateEntity(context: context)
             entity.currency = $0.currencyCode

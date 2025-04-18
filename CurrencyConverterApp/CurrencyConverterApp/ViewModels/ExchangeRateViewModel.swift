@@ -93,7 +93,7 @@ final class ExchangeRateViewModel: ViewModelProtocol {
                     last: response.timeLastUpdateUnix,
                     next: response.timeNextUpdateUnix
                 )
-                print(response.timeNextUpdateUnix)
+                
                 await MainActor.run {
                     allExchangeRates = response.exchangeRateList
                     state = .exchangeRates(response.exchangeRateList)
