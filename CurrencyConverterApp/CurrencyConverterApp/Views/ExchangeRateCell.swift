@@ -25,14 +25,14 @@ final class ExchangeRateCell: UITableViewCell {
     
     /// 통화 코드와 국가명을 수직으로 정렬하는 스택 뷰
     private lazy var labelStackView: UIStackView = {
-        let stackView = UIStackView(arrangedSubviews: [currencyLable, countryLabel])
+        let stackView = UIStackView(arrangedSubviews: [currencyLabel, countryLabel])
         stackView.axis = .vertical
         stackView.spacing = 4
         return stackView
     }()
     
     /// 통화 코드 라벨 (예: USD, KRW)
-    private let currencyLable: UILabel = {
+    private let currencyLabel: UILabel = {
         let label = UILabel()
         label.font = .systemFont(ofSize: 16, weight: .medium)
         label.textColor = .black
@@ -59,6 +59,9 @@ final class ExchangeRateCell: UITableViewCell {
     private lazy var favoriteButton: UIButton = {
         let button = UIButton()
         button.tintColor = .systemYellow
+        button.imageView?.contentMode = .scaleAspectFit
+        button.contentHorizontalAlignment = .fill
+        button.contentVerticalAlignment = .fill
         button.addTarget(self, action: #selector(favoriteButtonDidTap), for: .touchUpInside)
         return button
     }()
@@ -106,7 +109,7 @@ final class ExchangeRateCell: UITableViewCell {
             $0.leading.equalTo(exchangeRateLabel.snp.trailing).offset(16)
             $0.trailing.equalToSuperview().inset(16)
             $0.centerY.equalToSuperview()
-            $0.width.height.equalTo(labelStackView.snp.height)
+            $0.width.height.equalTo(labelStackView.snp.height).multipliedBy(0.8)
         }
     }
     
@@ -114,7 +117,7 @@ final class ExchangeRateCell: UITableViewCell {
     
     @objc
     private func favoriteButtonDidTap() {
-        guard let currencyCode = currencyLable.text else { return }
+        guard let currencyCode = currencyLabel.text else { return }
         delegate?.favoriteButtonDidTap(for: currencyCode)
     }
     
@@ -126,9 +129,11 @@ final class ExchangeRateCell: UITableViewCell {
     ///   - country: 국가명 (예: 미국)
     ///   - exchangeRate: 환율 값 (예: 1324.1234)
     func configure(currency: String, country: String, exchangeRate: Double, isFavorite: Bool) {
-        currencyLable.text = currency
+        currencyLabel.text = currency
         countryLabel.text = country
         exchangeRateLabel.text = String(format: "%.4f", exchangeRate)
-        favoriteButton.setImage(isFavorite ? UIImage(systemName: "star.fill") : UIImage(systemName: "star"), for: .normal)
+        
+        let imageName = isFavorite == true ? "star.fill" : "star"
+        favoriteButton.setImage(UIImage(systemName: imageName), for: .normal)
     }
 }
