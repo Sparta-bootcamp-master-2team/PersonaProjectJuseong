@@ -8,9 +8,17 @@
 import UIKit
 import SnapKit
 
+protocol ExchangeRateCellDelegate: AnyObject {
+    func favoriteButtonDidTap(for currencyCode: String)
+}
+
 final class ExchangeRateCell: UITableViewCell {
     
     // MARK: - Properties
+    
+    weak var delegate: ExchangeRateCellDelegate?
+    
+    // MARK: - UI Components
     
     /// 셀 재사용 식별자
     static let reuseIdentifier = "ExchangeRateCell"
@@ -48,9 +56,10 @@ final class ExchangeRateCell: UITableViewCell {
         return label
     }()
     
-    private let favoriteButton: UIButton = {
+    private lazy var favoriteButton: UIButton = {
         let button = UIButton()
         button.tintColor = .systemYellow
+        button.addTarget(self, action: #selector(favoriteButtonDidTap), for: .touchUpInside)
         return button
     }()
     
@@ -99,6 +108,14 @@ final class ExchangeRateCell: UITableViewCell {
             $0.centerY.equalToSuperview()
             $0.width.height.equalTo(labelStackView.snp.height)
         }
+    }
+    
+    // MARK: - Button Event
+    
+    @objc
+    private func favoriteButtonDidTap() {
+        guard let currencyCode = currencyLable.text else { return }
+        delegate?.favoriteButtonDidTap(for: currencyCode)
     }
     
     // MARK: - Configuration

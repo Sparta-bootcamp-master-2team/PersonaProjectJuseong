@@ -17,6 +17,7 @@ enum ExchangeRateState {
 enum ExchangeRateAction {
     case fetch              // 환율 데이터 전체 로드
     case applyFilter(String)    // 검색어를 통한 필터링
+    case favorite(String)
 }
 
 @MainActor
@@ -61,6 +62,8 @@ final class ExchangeRateViewModel: ViewModelProtocol {
                 self?.fetchExchangeRates()
             case .applyFilter(let keyword):
                 self?.filterExchangeRates(with: keyword)
+            case .favorite(let currencyCode):
+                self?.toggleFavorite(for: currencyCode)
             }
         }
     }
@@ -125,5 +128,10 @@ final class ExchangeRateViewModel: ViewModelProtocol {
         }
         // 필터링 결과 업데이트
         state = .exchangeRates(filtered)
+    }
+    
+    private func toggleFavorite(for currencyCode: String) {
+        CoreDataManager.shared.toggleFavorite(for: currencyCode)
+        fetchFromCoreData()
     }
 }

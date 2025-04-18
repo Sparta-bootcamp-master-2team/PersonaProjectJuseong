@@ -75,6 +75,21 @@ final class CoreDataManager {
         saveContext()
     }
     
+    func toggleFavorite(for currencyCode: String) {
+        let request: NSFetchRequest<ExchangeRateEntity> = ExchangeRateEntity.fetchRequest()
+        request.predicate = NSPredicate(format: "currency == %@", currencyCode)
+        
+        do {
+            if let target = try context.fetch(request).first {
+                target.isFavorite.toggle()
+                saveContext()
+            }
+        } catch {
+            print("즐겨찾기 상태 토글 실패: \(error)")
+        }
+    }
+
+    
     func saveContext() {
         if context.hasChanges {
             do {

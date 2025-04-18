@@ -118,6 +118,7 @@ final class ExchangeRateViewController: UIViewController {
                 exchangeRate: item.rate,
                 isFavorite: item.isFavorite
             )
+            cell.delegate = self
             
             return cell
         }
@@ -182,5 +183,11 @@ extension ExchangeRateViewController: UITableViewDelegate {
         let nextVM = CalculatorViewModel(exchangeRate: exchangeRate)
         let nextVC = CalculatorViewController(viewModel: nextVM)
         navigationController?.pushViewController(nextVC, animated: true)
+    }
+}
+
+extension ExchangeRateViewController: ExchangeRateCellDelegate {
+    func favoriteButtonDidTap(for currencyCode: String) {
+        viewModel.action?(.favorite(currencyCode))
     }
 }
