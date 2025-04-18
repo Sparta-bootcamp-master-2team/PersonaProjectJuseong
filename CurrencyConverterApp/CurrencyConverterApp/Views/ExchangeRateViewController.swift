@@ -115,7 +115,8 @@ final class ExchangeRateViewController: UIViewController {
             cell.configure(
                 currency: item.currencyCode,
                 country: item.country,
-                exchangeRate: item.rate
+                exchangeRate: item.rate,
+                isFavorite: item.isFavorite
             )
             
             return cell

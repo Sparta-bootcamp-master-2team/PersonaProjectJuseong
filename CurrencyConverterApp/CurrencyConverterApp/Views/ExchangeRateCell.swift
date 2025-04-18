@@ -48,6 +48,12 @@ final class ExchangeRateCell: UITableViewCell {
         return label
     }()
     
+    private let favoriteButton: UIButton = {
+        let button = UIButton()
+        button.tintColor = .systemYellow
+        return button
+    }()
+    
     // MARK: - Initializers
     
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
@@ -64,12 +70,17 @@ final class ExchangeRateCell: UITableViewCell {
     /// 셀의 UI 구성 및 초기화
     private func setupUI() {
         self.contentView.backgroundColor = .white
+        self.selectionStyle = .none
         setupConstraints()
     }
     
     /// SnapKit을 사용하여 UI 제약 조건 설정
     private func setupConstraints() {
-        [labelStackView, exchangeRateLabel].forEach { contentView.addSubview($0) }
+        [
+            labelStackView,
+            exchangeRateLabel,
+            favoriteButton
+        ].forEach { contentView.addSubview($0) }
         
         labelStackView.snp.makeConstraints {
             $0.leading.equalToSuperview().inset(16)
@@ -78,9 +89,15 @@ final class ExchangeRateCell: UITableViewCell {
         
         exchangeRateLabel.snp.makeConstraints {
             $0.leading.greaterThanOrEqualTo(labelStackView.snp.trailing).offset(16)
-            $0.trailing.equalToSuperview().inset(16)
             $0.width.equalTo(120)
             $0.centerY.equalToSuperview()
+        }
+        
+        favoriteButton.snp.makeConstraints {
+            $0.leading.equalTo(exchangeRateLabel.snp.trailing).offset(16)
+            $0.trailing.equalToSuperview().inset(16)
+            $0.centerY.equalToSuperview()
+            $0.width.height.equalTo(labelStackView.snp.height)
         }
     }
     
@@ -91,9 +108,10 @@ final class ExchangeRateCell: UITableViewCell {
     ///   - currency: 통화 코드 (예: USD)
     ///   - country: 국가명 (예: 미국)
     ///   - exchangeRate: 환율 값 (예: 1324.1234)
-    func configure(currency: String, country: String, exchangeRate: Double) {
+    func configure(currency: String, country: String, exchangeRate: Double, isFavorite: Bool) {
         currencyLable.text = currency
         countryLabel.text = country
         exchangeRateLabel.text = String(format: "%.4f", exchangeRate)
+        favoriteButton.setImage(isFavorite ? UIImage(systemName: "star.fill") : UIImage(systemName: "star"), for: .normal)
     }
 }
