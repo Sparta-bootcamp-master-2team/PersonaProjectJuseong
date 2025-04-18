@@ -108,7 +108,7 @@ final class ExchangeRateViewModel: ViewModelProtocol {
     
     private func fetchFromCoreData() {
         let entity = CoreDataManager.shared.fetchExchangeRate()
-        let rates = entity.map { ExchangeRateInfo(entity: $0) }
+        let rates: [ExchangeRateInfo] = .fromEntity(entity)
         allExchangeRates = rates
         state = .exchangeRates(rates)
     }

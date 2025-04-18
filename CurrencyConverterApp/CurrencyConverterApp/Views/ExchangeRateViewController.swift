@@ -145,7 +145,7 @@ final class ExchangeRateViewController: UIViewController {
         var snapshot = NSDiffableDataSourceSnapshot<Section, Item>()
         snapshot.appendSections([.main])
         snapshot.appendItems(items, toSection: .main)
-        datasource.apply(snapshot, animatingDifferences: false)
+        datasource.apply(snapshot)
         
         // 검색 결과가 없을 경우 빈 메시지 라벨을 배경으로 설정
         tableView.backgroundView = items.isEmpty ? emptyMessageLabel : nil

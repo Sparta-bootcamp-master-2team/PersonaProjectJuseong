@@ -51,7 +51,7 @@ final class NetworkManager {
         }
         
         return ExchangeRateResponse(
-            exchangeRateList: dto.exchangeRateList,
+            exchangeRateList: .fromDTO(dto.rates),
             timeLastUpdateUnix: dto.timeLastUpdateUnix,
             timeNextUpdateUnix: dto.timeNextUpdateUnix
         )

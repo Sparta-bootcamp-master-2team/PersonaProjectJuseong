@@ -25,14 +25,6 @@ struct ExchangeRateInfo: Hashable {
     var isFavorite: Bool = false
 }
 
-extension ExchangeRateInfo {
-    init(entity: ExchangeRateEntity) {
-        self.currencyCode = entity.currency ?? "알 수 없음"
-        self.rate = entity.rate
-        self.isFavorite = entity.isFavorite
-    }
-}
-
 // MARK: - 국가명 매핑
 
 extension ExchangeRateInfo {
