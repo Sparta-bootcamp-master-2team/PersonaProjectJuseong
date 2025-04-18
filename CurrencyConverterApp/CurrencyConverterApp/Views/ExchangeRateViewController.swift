@@ -115,8 +115,10 @@ final class ExchangeRateViewController: UIViewController {
             cell.configure(
                 currency: item.currencyCode,
                 country: item.country,
-                exchangeRate: item.rate
+                exchangeRate: item.rate,
+                isFavorite: item.isFavorite
             )
+            cell.delegate = self
             
             return cell
         }
@@ -143,7 +145,7 @@ final class ExchangeRateViewController: UIViewController {
         var snapshot = NSDiffableDataSourceSnapshot<Section, Item>()
         snapshot.appendSections([.main])
         snapshot.appendItems(items, toSection: .main)
-        datasource.apply(snapshot, animatingDifferences: false)
+        datasource.apply(snapshot)
         
         // 검색 결과가 없을 경우 빈 메시지 라벨을 배경으로 설정
         tableView.backgroundView = items.isEmpty ? emptyMessageLabel : nil
@@ -181,5 +183,11 @@ extension ExchangeRateViewController: UITableViewDelegate {
         let nextVM = CalculatorViewModel(exchangeRate: exchangeRate)
         let nextVC = CalculatorViewController(viewModel: nextVM)
         navigationController?.pushViewController(nextVC, animated: true)
+    }
+}
+
+extension ExchangeRateViewController: ExchangeRateCellDelegate {
+    func favoriteButtonDidTap(for currencyCode: String) {
+        viewModel.action?(.favorite(currencyCode))
     }
 }

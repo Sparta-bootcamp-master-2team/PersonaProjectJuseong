@@ -21,6 +21,8 @@ struct ExchangeRateInfo: Hashable {
     
     /// 환율 값 (예: 1350.123)
     let rate: Double
+    
+    var isFavorite: Bool = false
 }
 
 // MARK: - 국가명 매핑

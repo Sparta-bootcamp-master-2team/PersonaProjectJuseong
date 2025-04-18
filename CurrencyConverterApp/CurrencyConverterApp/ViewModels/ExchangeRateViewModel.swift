@@ -17,6 +17,7 @@ enum ExchangeRateState {
 enum ExchangeRateAction {
     case fetch              // 환율 데이터 전체 로드
     case applyFilter(String)    // 검색어를 통한 필터링
+    case favorite(String)
 }
 
 @MainActor
@@ -58,23 +59,44 @@ final class ExchangeRateViewModel: ViewModelProtocol {
         self.action = { [weak self] action in
             switch action {
             case .fetch:
-                self?.loadExchangeRates()
+                self?.fetchExchangeRates()
             case .applyFilter(let keyword):
                 self?.filterExchangeRates(with: keyword)
+            case .favorite(let currencyCode):
+                self?.toggleFavorite(for: currencyCode)
             }
         }
     }
     
     // MARK: - Logic
     
+    private func fetchExchangeRates() {
+        let nextUpdateUnix = CoreDataManager.shared.fetchNextUpdateTime()
+        let currentUnix = Int64(Date().timeIntervalSince1970)
+
+        if nextUpdateUnix == nil || currentUnix >= nextUpdateUnix! {
+            print("네트워크로 환율 데이터 가져오는 중")
+            fetchFromNetwork()
+        } else {
+            print("CoreData에서 환율 데이터 불러오기")
+            fetchFromCoreData()
+        }
+    }
+    
     /// 네트워크를 통해 전체 환율 데이터를 불러와 상태를 업데이트
-    nonisolated private func loadExchangeRates() {
+    nonisolated private func fetchFromNetwork() {
         Task {
             do {
-                let rates = try await NetworkManager.shared.fetchExchangeRateData()
+                let response = try await NetworkManager.shared.fetchExchangeRateData()
+                CoreDataManager.shared.saveExchangeRate(exchangeRates: response.exchangeRateList)
+                CoreDataManager.shared.saveTimeStamp(
+                    last: response.timeLastUpdateUnix,
+                    next: response.timeNextUpdateUnix
+                )
+                
                 await MainActor.run {
-                    allExchangeRates = rates
-                    state = .exchangeRates(rates)
+                    allExchangeRates = response.exchangeRateList
+                    state = .exchangeRates(response.exchangeRateList)
                 }
             } catch {
                 await MainActor.run {
@@ -82,6 +104,13 @@ final class ExchangeRateViewModel: ViewModelProtocol {
                 }
             }
         }
+    }
+    
+    private func fetchFromCoreData() {
+        let entity = CoreDataManager.shared.fetchExchangeRate()
+        let rates: [ExchangeRateInfo] = .fromEntity(entity)
+        allExchangeRates = rates
+        state = .exchangeRates(rates)
     }
     
     /// 검색어에 따른 환율 데이터 필터링을 수행
@@ -99,5 +128,10 @@ final class ExchangeRateViewModel: ViewModelProtocol {
         }
         // 필터링 결과 업데이트
         state = .exchangeRates(filtered)
+    }
+    
+    private func toggleFavorite(for currencyCode: String) {
+        CoreDataManager.shared.toggleFavorite(for: currencyCode)
+        fetchFromCoreData()
     }
 }
