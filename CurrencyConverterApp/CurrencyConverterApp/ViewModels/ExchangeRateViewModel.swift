@@ -84,7 +84,7 @@ final class ExchangeRateViewModel: ViewModelProtocol {
             
             // nextUpdateUnix가 nil이 아닌 경우 → 이미 캐시된 데이터가 있음
             if let nextUpdateUnix {
-                if now >= nextUpdateUnix {
+                if true { // MockData 테스트하기 위해 true
                     // 업데이트 시간이 지났으므로 네트워크에서 최신 환율만 갱신
                     print("업데이트")
                     result = await updateRatesOnly()
@@ -132,8 +132,9 @@ final class ExchangeRateViewModel: ViewModelProtocol {
         do {
             let response = try await NetworkManager.shared.fetchExchangeRateData()
             let rateMap = Dictionary(uniqueKeysWithValues: response.exchangeRateList.map { ($0.currencyCode, $0.rate) })
-
-            await CoreDataManager.shared.updateExchangeRates(rateMap)
+            let mockRate = MockData.mockRates // 테스트 용
+            
+            await CoreDataManager.shared.updateExchangeRates(mockRate)
             await CoreDataManager.shared.deleteTimeStamp()
             await CoreDataManager.shared.saveTimeStamp(
                 last: response.timeLastUpdateUnix,

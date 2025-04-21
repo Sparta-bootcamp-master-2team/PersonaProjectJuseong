@@ -10,7 +10,7 @@ import Foundation
 extension Array where Element == ExchangeRateInfo {
     static func fromDTO(_ dto: [String: Double]) -> [ExchangeRateInfo] {
         dto
-            .map { ExchangeRateInfo(currencyCode: $0.key, rate: $0.value, trend: .up) }
+            .map { ExchangeRateInfo(currencyCode: $0.key, rate: $0.value, trend: .none) }
             .sorted { $0.currencyCode < $1.currencyCode }
     }
     

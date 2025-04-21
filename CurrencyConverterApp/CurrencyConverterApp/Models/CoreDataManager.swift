@@ -52,10 +52,20 @@ actor CoreDataManager {
                 return (code, $0)
             })
 
-            for (code, rate) in dto {
-                if let entity = entityMap[code] {
-                    entity.rate = rate
+            for (code, newRate) in dto {
+                guard let entity = entityMap[code] else { continue }
+                
+                let oldRate = entity.rate
+                let difference = abs(newRate - oldRate)
+
+                // 변화량에 따라 trend 설정
+                if difference > 0.01 {
+                    entity.trend = newRate > oldRate ? 1 : -1
+                } else {
+                    entity.trend = 0
                 }
+
+                entity.rate = newRate
             }
 
             self.saveContext()
