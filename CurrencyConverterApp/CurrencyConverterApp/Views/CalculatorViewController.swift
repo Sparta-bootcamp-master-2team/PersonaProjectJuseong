@@ -27,7 +27,6 @@ final class CalculatorViewController: UIViewController {
     private let currencyLabel: UILabel = {
         let label = UILabel()
         label.font = .systemFont(ofSize: 24, weight: .bold)
-        label.textColor = .black
         label.textAlignment = .center
         return label
     }()
@@ -35,7 +34,7 @@ final class CalculatorViewController: UIViewController {
     private let countryLabel: UILabel = {
         let label = UILabel()
         label.font = .systemFont(ofSize: 16, weight: .regular)
-        label.textColor = .gray
+        label.textColor = .secondaryLabel
         label.textAlignment = .center
         return label
     }()
@@ -46,6 +45,7 @@ final class CalculatorViewController: UIViewController {
         textField.keyboardType = .decimalPad
         textField.placeholder = "달러(USD)를 입력하세요"
         textField.textAlignment = .center
+        textField.backgroundColor = .secondarySystemBackground
         return textField
     }()
     
@@ -65,7 +65,6 @@ final class CalculatorViewController: UIViewController {
         let label = UILabel()
         label.text = "계산 결과가 여기에 표시됩니다"
         label.font = .systemFont(ofSize: 20, weight: .medium)
-        label.textColor = .black
         label.textAlignment = .center
         label.numberOfLines = 0
         return label
@@ -95,7 +94,7 @@ final class CalculatorViewController: UIViewController {
     // MARK: - UI Setup
     
     private func setupUI() {
-        view.backgroundColor = .white
+        view.backgroundColor = .secondarySystemBackground
         title = "환율 계산기"
         navigationController?.navigationBar.prefersLargeTitles = true
         setupConstraints()

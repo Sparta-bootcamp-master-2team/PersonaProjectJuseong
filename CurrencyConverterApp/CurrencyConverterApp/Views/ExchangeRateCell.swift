@@ -37,7 +37,6 @@ final class ExchangeRateCell: UITableViewCell {
     private let currencyLabel: UILabel = {
         let label = UILabel()
         label.font = .systemFont(ofSize: 16, weight: .medium)
-        label.textColor = .black
         return label
     }()
     
@@ -45,7 +44,7 @@ final class ExchangeRateCell: UITableViewCell {
     private let countryLabel: UILabel = {
         let label = UILabel()
         label.font = .systemFont(ofSize: 14, weight: .regular)
-        label.textColor = .gray
+        label.textColor = .secondaryLabel
         return label
     }()
     
@@ -53,7 +52,6 @@ final class ExchangeRateCell: UITableViewCell {
     private let exchangeRateLabel: UILabel = {
         let label = UILabel()
         label.font = .systemFont(ofSize: 16, weight: .regular)
-        label.textColor = .black
         label.textAlignment = .right
         return label
     }()
@@ -89,7 +87,8 @@ final class ExchangeRateCell: UITableViewCell {
     
     /// 셀의 UI 구성 및 초기화
     private func setupUI() {
-        self.contentView.backgroundColor = .white
+        self.backgroundColor = .clear
+        self.contentView.backgroundColor = .clear
         self.selectionStyle = .none
         setupConstraints()
     }

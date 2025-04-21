@@ -38,7 +38,7 @@ final class ExchangeRateViewController: UIViewController {
         let label = UILabel()
         label.text = "검색 결과 없음"
         label.textAlignment = .center
-        label.textColor = .gray
+        label.textColor = .secondaryLabel
         label.font = .systemFont(ofSize: 16, weight: .regular)
         return label
     }()
@@ -46,7 +46,7 @@ final class ExchangeRateViewController: UIViewController {
     /// 환율 정보를 표시할 테이블 뷰
     private lazy var tableView: UITableView = {
         let tableView = UITableView()
-        tableView.backgroundColor = .white
+        tableView.backgroundColor = .clear
         tableView.rowHeight = 60
         tableView.delegate = self
         tableView.keyboardDismissMode = .onDrag
@@ -78,7 +78,7 @@ final class ExchangeRateViewController: UIViewController {
     
     /// UI 요소들을 초기화하고 배치
     private func setupUI() {
-        view.backgroundColor = .white
+        view.backgroundColor = .secondarySystemBackground
         title = "환율 정보"
         navigationController?.navigationBar.prefersLargeTitles = true
         setupConstraints()
