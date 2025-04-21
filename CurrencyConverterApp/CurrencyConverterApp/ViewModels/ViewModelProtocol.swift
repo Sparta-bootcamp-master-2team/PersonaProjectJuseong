@@ -6,7 +6,7 @@
 //
 import Foundation
 
-@MainActor
+
 protocol ViewModelProtocol {
     associatedtype Action
     associatedtype State
