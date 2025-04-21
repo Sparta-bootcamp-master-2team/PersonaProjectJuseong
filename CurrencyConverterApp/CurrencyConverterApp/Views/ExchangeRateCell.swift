@@ -58,6 +58,12 @@ final class ExchangeRateCell: UITableViewCell {
         return label
     }()
     
+    private let trendImageView: UIImageView = {
+        let imageView = UIImageView()
+        imageView.contentMode = .scaleAspectFit
+        return imageView
+    }()
+    
     private lazy var favoriteButton: UIButton = {
         let button = UIButton()
         button.tintColor = .systemYellow
@@ -93,6 +99,7 @@ final class ExchangeRateCell: UITableViewCell {
         [
             labelStackView,
             exchangeRateLabel,
+            trendImageView,
             favoriteButton
         ].forEach { contentView.addSubview($0) }
         
@@ -107,8 +114,14 @@ final class ExchangeRateCell: UITableViewCell {
             $0.centerY.equalToSuperview()
         }
         
-        favoriteButton.snp.makeConstraints {
+        trendImageView.snp.makeConstraints {
             $0.leading.equalTo(exchangeRateLabel.snp.trailing).offset(16)
+            $0.centerY.equalToSuperview()
+            $0.width.height.equalTo(labelStackView.snp.height).multipliedBy(0.6)
+        }
+
+        favoriteButton.snp.makeConstraints {
+            $0.leading.equalTo(trendImageView.snp.trailing).offset(16)
             $0.trailing.equalToSuperview().inset(16)
             $0.centerY.equalToSuperview()
             $0.width.height.equalTo(labelStackView.snp.height).multipliedBy(0.8)
@@ -130,12 +143,22 @@ final class ExchangeRateCell: UITableViewCell {
     ///   - currency: 통화 코드 (예: USD)
     ///   - country: 국가명 (예: 미국)
     ///   - exchangeRate: 환율 값 (예: 1324.1234)
-    func configure(currency: String, country: String, exchangeRate: Double, isFavorite: Bool) {
+    func configure(currency: String, country: String, exchangeRate: Double, trend: ExchangeRateTrend, isFavorite: Bool) {
         currencyLabel.text = currency
         countryLabel.text = country
         exchangeRateLabel.text = String(format: "%.4f", exchangeRate)
+        trendImageView.image = UIImage(systemName: trend.symbol)
         
-        let imageName = isFavorite == true ? "star.fill" : "star"
-        favoriteButton.setImage(UIImage(systemName: imageName), for: .normal)
+        switch trend {
+        case .up:
+            trendImageView.tintColor = .systemRed
+        case .none:
+            trendImageView.tintColor = .clear
+        case .down:
+            trendImageView.tintColor = .systemBlue
+        }
+        
+        let favoriteImageName = isFavorite == true ? "star.fill" : "star"
+        favoriteButton.setImage(UIImage(systemName: favoriteImageName), for: .normal)
     }
 }

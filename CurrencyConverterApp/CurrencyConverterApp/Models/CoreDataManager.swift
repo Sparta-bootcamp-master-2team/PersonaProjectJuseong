@@ -30,6 +30,7 @@ actor CoreDataManager {
                 entity.currency = rate.currencyCode
                 entity.rate = rate.rate
                 entity.isFavorite = rate.isFavorite
+                entity.trend = Int64(rate.trend.rawValue)
             }
             self.saveContext()
         }
@@ -54,11 +55,6 @@ actor CoreDataManager {
             for (code, rate) in dto {
                 if let entity = entityMap[code] {
                     entity.rate = rate
-                } else {
-                    let newEntity = ExchangeRateEntity(context: self.context)
-                    newEntity.currency = code
-                    newEntity.rate = rate
-                    newEntity.isFavorite = false
                 }
             }
 

@@ -79,20 +79,23 @@ final class ExchangeRateViewModel: ViewModelProtocol {
             // 현재 시간과 다음 업데이트 시간을 가져옴
             let nextUpdateUnix = await CoreDataManager.shared.fetchNextUpdateTime()
             let now = Int64(Date().timeIntervalSince1970)
-
+            
             let result: Result<[ExchangeRateInfo], Error>
-
+            
             // nextUpdateUnix가 nil이 아닌 경우 → 이미 캐시된 데이터가 있음
             if let nextUpdateUnix {
                 if now >= nextUpdateUnix {
                     // 업데이트 시간이 지났으므로 네트워크에서 최신 환율만 갱신
+                    print("업데이트")
                     result = await updateRatesOnly()
                 } else {
                     // 캐시된 데이터가 아직 유효하므로 CoreData에서 데이터만 불러옴
+                    print("코어 데이터")
                     let cachedEntities = await CoreDataManager.shared.fetchExchangeRates()
                     result = .success([ExchangeRateInfo].fromEntity(cachedEntities))
                 }
             } else {
+                print("최초 실행")
                 // nextUpdateUnix가 nil인 경우 → 앱 최초 실행이거나 캐시 없음
                 result = await fetchAndSaveAll()
             }

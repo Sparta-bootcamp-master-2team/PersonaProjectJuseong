@@ -7,6 +7,20 @@
 
 import Foundation
 
+enum ExchangeRateTrend: Int {
+    case up = 1
+    case none = 0
+    case down = -1
+    
+    var symbol: String {
+        switch self {
+        case .up:   return "arrow.up.right"
+        case .none: return ""
+        case .down: return "arrow.down.right"
+        }
+    }
+}
+
 /// 환율 정보를 나타내는 모델
 /// 통화 코드, 환율 값, 국가명을 포함
 struct ExchangeRateInfo: Hashable {
@@ -21,7 +35,7 @@ struct ExchangeRateInfo: Hashable {
     
     /// 환율 값 (예: 1350.123)
     let rate: Double
-    
+    var trend: ExchangeRateTrend = .none
     var isFavorite: Bool = false
 }
 
