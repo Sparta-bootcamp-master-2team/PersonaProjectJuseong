@@ -17,7 +17,6 @@ enum CalculatorAction {
 
 // MARK: - ViewModel
 
-@MainActor
 final class CalculatorViewModel: ViewModelProtocol {
     // MARK: - Typealias
     
@@ -26,16 +25,16 @@ final class CalculatorViewModel: ViewModelProtocol {
     
     // MARK: - Properties
     
-    private(set) var state: CalculatorState {
+    private(set) var state: State {
         didSet {
             onStateChange?(state)
         }
     }
-    
+
     let exchangeRate: ExchangeRateInfo
     
-    var action: ((CalculatorAction) -> Void)?
-    var onStateChange: ((CalculatorState) -> Void)?
+    var action: ((Action) -> Void)?
+    var onStateChange: ((State) -> Void)?
     
     // MARK: - Init
     

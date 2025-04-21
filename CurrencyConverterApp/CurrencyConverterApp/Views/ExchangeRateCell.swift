@@ -21,7 +21,9 @@ final class ExchangeRateCell: UITableViewCell {
     // MARK: - UI Components
     
     /// 셀 재사용 식별자
-    static let reuseIdentifier = "ExchangeRateCell"
+    static var reuseIdentifier: String {
+        String(describing: self)
+    }
     
     /// 통화 코드와 국가명을 수직으로 정렬하는 스택 뷰
     private lazy var labelStackView: UIStackView = {

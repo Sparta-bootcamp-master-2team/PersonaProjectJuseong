@@ -7,11 +7,16 @@
 
 import Foundation
 
+// MARK: - State
+
 /// ExchangeRate 화면에서 사용하는 상태 정의
 enum ExchangeRateState {
     case exchangeRates([ExchangeRateInfo])
     case networkError(Error)
 }
+
+// MARK: - Action
+
 /// ExchangeRate 화면에서 발생 가능한 액션 정의
 enum ExchangeRateAction {
     case fetch              // 환율 데이터 전체 로드
@@ -19,7 +24,8 @@ enum ExchangeRateAction {
     case favorite(String)
 }
 
-@MainActor
+// MARK: - ViewModel
+
 final class ExchangeRateViewModel: ViewModelProtocol {
 
     // MARK: - Typealias
@@ -30,13 +36,17 @@ final class ExchangeRateViewModel: ViewModelProtocol {
     // MARK: - Properties
 
     private(set) var state: State {
-        didSet { onStateChange?(state) }
+        didSet {
+            Task { @MainActor in
+                onStateChange?(state)
+            }
+        }
     }
-
+    
+    private var allExchangeRates: [ExchangeRateInfo] = []
+    
     private(set) var action: ((Action) -> Void)?
     var onStateChange: ((State) -> Void)?
-
-    private var allExchangeRates: [ExchangeRateInfo] = []
 
     // MARK: - Initializer
 
@@ -64,7 +74,7 @@ final class ExchangeRateViewModel: ViewModelProtocol {
 
     // MARK: - Data Fetching
 
-    nonisolated private func performFetch() {
+    private func performFetch() {
         Task {
             // 현재 시간과 다음 업데이트 시간을 가져옴
             let nextUpdateUnix = await CoreDataManager.shared.fetchNextUpdateTime()
@@ -88,22 +98,20 @@ final class ExchangeRateViewModel: ViewModelProtocol {
             }
 
             // 결과에 따라 ViewModel 상태를 업데이트
-            await MainActor.run {
-                switch result {
-                case .success(let list):
-                    // 성공 시 전체 리스트 저장 및 상태 업데이트
-                    self.allExchangeRates = list
-                    self.state = .exchangeRates(list)
-                case .failure(let error):
-                    // 실패 시 네트워크 에러 상태 전달
-                    self.state = .networkError(error)
-                }
+            switch result {
+            case .success(let list):
+                // 성공 시 전체 리스트 저장 및 상태 업데이트
+                self.allExchangeRates = list
+                self.state = .exchangeRates(list)
+            case .failure(let error):
+                // 실패 시 네트워크 에러 상태 전달
+                self.state = .networkError(error)
             }
         }
     }
 
 
-    nonisolated private func fetchAndSaveAll() async -> Result<[ExchangeRateInfo], Error> {
+    private func fetchAndSaveAll() async -> Result<[ExchangeRateInfo], Error> {
         do {
             let response = try await NetworkManager.shared.fetchExchangeRateData()
             await CoreDataManager.shared.saveExchangeRates(response.exchangeRateList)
@@ -117,7 +125,7 @@ final class ExchangeRateViewModel: ViewModelProtocol {
         }
     }
 
-    nonisolated private func updateRatesOnly() async -> Result<[ExchangeRateInfo], Error> {
+    private func updateRatesOnly() async -> Result<[ExchangeRateInfo], Error> {
         do {
             let response = try await NetworkManager.shared.fetchExchangeRateData()
             let rateMap = Dictionary(uniqueKeysWithValues: response.exchangeRateList.map { ($0.currencyCode, $0.rate) })
@@ -138,16 +146,14 @@ final class ExchangeRateViewModel: ViewModelProtocol {
 
     // MARK: - Favorite Handle
 
-    nonisolated private func handleFavoriteToggle(for currencyCode: String) {
+    private func handleFavoriteToggle(for currencyCode: String) {
         Task {
             await CoreDataManager.shared.toggleFavorite(for: currencyCode)
             let updatedEntities = await CoreDataManager.shared.fetchExchangeRates()
             let updatedRates = [ExchangeRateInfo].fromEntity(updatedEntities)
-
-            await MainActor.run {
-                self.allExchangeRates = updatedRates
-                self.state = .exchangeRates(updatedRates)
-            }
+            
+            self.allExchangeRates = updatedRates
+            self.state = .exchangeRates(updatedRates)
         }
     }
 
