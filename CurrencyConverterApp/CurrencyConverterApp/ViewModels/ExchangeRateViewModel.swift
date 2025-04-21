@@ -35,7 +35,7 @@ final class ExchangeRateViewModel: ViewModelProtocol {
 
     // MARK: - Properties
 
-    private(set) var state: State {
+    var state: State {
         didSet {
             Task { @MainActor in
                 onStateChange?(state)
@@ -45,7 +45,7 @@ final class ExchangeRateViewModel: ViewModelProtocol {
     
     private var allExchangeRates: [ExchangeRateInfo] = []
     
-    private(set) var action: ((Action) -> Void)?
+    var action: ((Action) -> Void)?
     var onStateChange: ((State) -> Void)?
 
     // MARK: - Initializer

@@ -25,7 +25,7 @@ final class CalculatorViewModel: ViewModelProtocol {
     
     // MARK: - Properties
     
-    private(set) var state: State {
+    var state: State {
         didSet {
             onStateChange?(state)
         }
