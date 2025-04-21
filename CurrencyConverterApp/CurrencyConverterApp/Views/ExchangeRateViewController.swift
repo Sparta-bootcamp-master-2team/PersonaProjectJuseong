@@ -116,6 +116,7 @@ final class ExchangeRateViewController: UIViewController {
                 currency: item.currencyCode,
                 country: item.country,
                 exchangeRate: item.rate,
+                trend: item.trend,
                 isFavorite: item.isFavorite
             )
             cell.delegate = self

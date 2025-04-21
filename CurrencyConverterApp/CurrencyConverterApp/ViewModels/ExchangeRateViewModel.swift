@@ -7,11 +7,15 @@
 
 import Foundation
 
+// MARK: - State
+
 /// ExchangeRate 화면에서 사용하는 상태 정의
 enum ExchangeRateState {
     case exchangeRates([ExchangeRateInfo])
     case networkError(Error)
 }
+
+// MARK: - Action
 
 /// ExchangeRate 화면에서 발생 가능한 액션 정의
 enum ExchangeRateAction {
@@ -20,104 +24,148 @@ enum ExchangeRateAction {
     case favorite(String)
 }
 
-@MainActor
+// MARK: - ViewModel
+
 final class ExchangeRateViewModel: ViewModelProtocol {
+
     // MARK: - Typealias
 
     typealias Action = ExchangeRateAction
     typealias State = ExchangeRateState
-    
+
     // MARK: - Properties
+
+    private(set) var state: State {
+        didSet {
+            Task { @MainActor in
+                onStateChange?(state)
+            }
+        }
+    }
     
-    /// 네트워크에서 불러온 전체 환율 데이터를 저장
     private var allExchangeRates: [ExchangeRateInfo] = []
     
-    /// 현재 상태 (변경 시 onStateChange 호출)
-    private(set) var state: ExchangeRateState {
-        didSet {
-            onStateChange?(state)
-        }
-    }
-        
-    /// View에서 전달받은 액션을 처리하는 클로저
-    private(set) var action: ((ExchangeRateAction) -> Void)?
-    
-    /// View에 상태 변경을 알리기 위한 클로저
-    var onStateChange: ((ExchangeRateState) -> Void)?
-    
-    // MARK: - Init
-    
+    private(set) var action: ((Action) -> Void)?
+    var onStateChange: ((State) -> Void)?
+
+    // MARK: - Initializer
+
     init() {
-        self.state = .exchangeRates([]) // 초기 상태: 빈 환율 정보
+        self.state = .exchangeRates([])
         bindAction()
     }
-    
-    // MARK: - Binding
-    
+
+    // MARK: - Action Handling
+
     private func bindAction() {
-        // View에서 액션을 전달받으면 handle(action:)을 호출
         self.action = { [weak self] action in
+            guard let self else { return }
+
             switch action {
             case .fetch:
-                self?.fetchExchangeRates()
+                self.performFetch()
             case .applyFilter(let keyword):
-                self?.filterExchangeRates(with: keyword)
+                self.filter(with: keyword)
             case .favorite(let currencyCode):
-                self?.toggleFavorite(for: currencyCode)
+                self.handleFavoriteToggle(for: currencyCode)
             }
         }
     }
-    
-    // MARK: - Logic
-    
-    private func fetchExchangeRates() {
-        let nextUpdateUnix = CoreDataManager.shared.fetchNextUpdateTime()
-        let currentUnix = Int64(Date().timeIntervalSince1970)
 
-        if nextUpdateUnix == nil || currentUnix >= nextUpdateUnix! {
-            print("네트워크로 환율 데이터 가져오는 중")
-            fetchFromNetwork()
-        } else {
-            print("CoreData에서 환율 데이터 불러오기")
-            fetchFromCoreData()
-        }
-    }
-    
-    /// 네트워크를 통해 전체 환율 데이터를 불러와 상태를 업데이트
-    nonisolated private func fetchFromNetwork() {
+    // MARK: - Data Fetching
+
+    private func performFetch() {
         Task {
-            do {
-                let response = try await NetworkManager.shared.fetchExchangeRateData()
-                CoreDataManager.shared.saveExchangeRate(exchangeRates: response.exchangeRateList)
-                CoreDataManager.shared.saveTimeStamp(
-                    last: response.timeLastUpdateUnix,
-                    next: response.timeNextUpdateUnix
-                )
-                
-                await MainActor.run {
-                    allExchangeRates = response.exchangeRateList
-                    state = .exchangeRates(response.exchangeRateList)
+            // 현재 시간과 다음 업데이트 시간을 가져옴
+            let nextUpdateUnix = await CoreDataManager.shared.fetchNextUpdateTime()
+            let now = Int64(Date().timeIntervalSince1970)
+            
+            let result: Result<[ExchangeRateInfo], Error>
+            
+            // nextUpdateUnix가 nil이 아닌 경우 → 이미 캐시된 데이터가 있음
+            if let nextUpdateUnix {
+                if now >= nextUpdateUnix {
+                    // 업데이트 시간이 지났으므로 네트워크에서 최신 환율만 갱신
+                    print("업데이트")
+                    result = await updateRatesOnly()
+                } else {
+                    // 캐시된 데이터가 아직 유효하므로 CoreData에서 데이터만 불러옴
+                    print("코어 데이터")
+                    let cachedEntities = await CoreDataManager.shared.fetchExchangeRates()
+                    result = .success([ExchangeRateInfo].fromEntity(cachedEntities))
                 }
-            } catch {
-                await MainActor.run {
-                    state = .networkError(error)
-                }
+            } else {
+                print("최초 실행")
+                // nextUpdateUnix가 nil인 경우 → 앱 최초 실행이거나 캐시 없음
+                result = await fetchAndSaveAll()
+            }
+
+            // 결과에 따라 ViewModel 상태를 업데이트
+            switch result {
+            case .success(let list):
+                // 성공 시 전체 리스트 저장 및 상태 업데이트
+                self.allExchangeRates = list
+                self.state = .exchangeRates(list)
+            case .failure(let error):
+                // 실패 시 네트워크 에러 상태 전달
+                self.state = .networkError(error)
             }
         }
     }
-    
-    private func fetchFromCoreData() {
-        let entity = CoreDataManager.shared.fetchExchangeRate()
-        let rates: [ExchangeRateInfo] = .fromEntity(entity)
-        allExchangeRates = rates
-        state = .exchangeRates(rates)
+
+
+    private func fetchAndSaveAll() async -> Result<[ExchangeRateInfo], Error> {
+        do {
+            let response = try await NetworkManager.shared.fetchExchangeRateData()
+            await CoreDataManager.shared.saveExchangeRates(response.exchangeRateList)
+            await CoreDataManager.shared.saveTimeStamp(
+                last: response.timeLastUpdateUnix,
+                next: response.timeNextUpdateUnix
+            )
+            return .success(response.exchangeRateList)
+        } catch {
+            return .failure(error)
+        }
     }
-    
-    /// 검색어에 따른 환율 데이터 필터링을 수행
-    private func filterExchangeRates(with keyword: String) {
+
+    private func updateRatesOnly() async -> Result<[ExchangeRateInfo], Error> {
+        do {
+            let response = try await NetworkManager.shared.fetchExchangeRateData()
+            let rateMap = Dictionary(uniqueKeysWithValues: response.exchangeRateList.map { ($0.currencyCode, $0.rate) })
+            
+            await CoreDataManager.shared.updateExchangeRates(rateMap)
+            await CoreDataManager.shared.deleteTimeStamp()
+            await CoreDataManager.shared.saveTimeStamp(
+                last: response.timeLastUpdateUnix,
+                next: response.timeNextUpdateUnix
+            )
+
+            let updatedEntities = await CoreDataManager.shared.fetchExchangeRates()
+            return .success([ExchangeRateInfo].fromEntity(updatedEntities))
+        } catch {
+            return .failure(error)
+        }
+    }
+
+    // MARK: - Favorite Handle
+
+    private func handleFavoriteToggle(for currencyCode: String) {
+        Task {
+            await CoreDataManager.shared.toggleFavorite(for: currencyCode)
+            let updatedEntities = await CoreDataManager.shared.fetchExchangeRates()
+            let updatedRates = [ExchangeRateInfo].fromEntity(updatedEntities)
+            
+            self.allExchangeRates = updatedRates
+            self.state = .exchangeRates(updatedRates)
+        }
+    }
+
+    // MARK: - Filtering
+
+    private func filter(with keyword: String) {
         let trimmed = keyword.trimmingCharacters(in: .whitespacesAndNewlines)
-        
         let filtered: [ExchangeRateInfo]
+
         if trimmed.isEmpty {
             filtered = allExchangeRates
         } else {
@@ -126,12 +174,7 @@ final class ExchangeRateViewModel: ViewModelProtocol {
                 $0.country.localizedCaseInsensitiveContains(trimmed)
             }
         }
-        // 필터링 결과 업데이트
+
         state = .exchangeRates(filtered)
-    }
-    
-    private func toggleFavorite(for currencyCode: String) {
-        CoreDataManager.shared.toggleFavorite(for: currencyCode)
-        fetchFromCoreData()
     }
 }
