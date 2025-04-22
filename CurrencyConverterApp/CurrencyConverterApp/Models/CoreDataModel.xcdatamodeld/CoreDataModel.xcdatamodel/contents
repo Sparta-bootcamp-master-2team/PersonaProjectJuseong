@@ -10,4 +10,8 @@
         <attribute name="timeLastUpdateUnix" optional="YES" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="timeNextUpdateUnix" optional="YES" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
     </entity>
+    <entity name="LastViewedScreenEntity" representedClassName="LastViewedScreenEntity" syncable="YES" codeGenerationType="class">
+        <attribute name="currencyCode" optional="YES" attributeType="String"/>
+        <attribute name="screenType" optional="YES" attributeType="String"/>
+    </entity>
 </model>

@@ -7,6 +7,11 @@
 
 import CoreData
 
+enum LastViewedScreen {
+    case exchangeRate
+    case calculator(currencyCode: String)
+}
+
 actor CoreDataManager {
 
     // MARK: - 싱글톤 인스턴스
@@ -136,6 +141,45 @@ actor CoreDataManager {
             try context.save()
         } catch {
             print("❌ 컨텍스트 저장 실패: \(error.localizedDescription)")
+        }
+    }
+    
+    // MARK: - 마지막 화면 상태 저장/복원
+    
+    func saveLastViewedScreen(_ screen: LastViewedScreen) async {
+        context.performAndWait {
+            // 기존에 저장된 항목 삭제
+            let request: NSFetchRequest<NSFetchRequestResult> = LastViewedScreenEntity.fetchRequest()
+            let deleteRequest = NSBatchDeleteRequest(fetchRequest: request)
+            let _ = try? self.context.execute(deleteRequest)
+            
+            // 새 상태 저장
+            let entity = LastViewedScreenEntity(context: self.context)
+            switch screen {
+            case .exchangeRate:
+                entity.screenType = "exchangeRate"
+                entity.currencyCode = nil
+            case .calculator(let currency):
+                entity.screenType = "calculator"
+                entity.currencyCode = currency
+            }
+            
+            self.saveContext()
+        }
+    }
+    
+    func fetchLastViewedScreen() async -> LastViewedScreen {
+        await context.perform {
+            let request: NSFetchRequest<LastViewedScreenEntity> = LastViewedScreenEntity.fetchRequest()
+            guard let entity = try? self.context.fetch(request).first else {
+                return .exchangeRate
+            }
+            
+            if entity.screenType == "calculator", let code = entity.currencyCode {
+                return .calculator(currencyCode: code)
+            } else {
+                return .exchangeRate
+            }
         }
     }
 }
