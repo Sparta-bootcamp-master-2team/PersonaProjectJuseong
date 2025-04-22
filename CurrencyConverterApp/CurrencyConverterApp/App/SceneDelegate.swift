@@ -11,16 +11,41 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
     var window: UIWindow?
 
-
     func scene(_ scene: UIScene, willConnectTo session: UISceneSession, options connectionOptions: UIScene.ConnectionOptions) {
-        guard let windowScene = (scene as? UIWindowScene) else { return }
-        window = UIWindow(windowScene: windowScene)
-        let rootVM = ExchangeRateViewModel()
-        let rootVC = ExchangeRateViewController(viewModel: rootVM)
-        window?.rootViewController = UINavigationController(rootViewController: rootVC)
-        window?.makeKeyAndVisible()
+        guard let windowScene = scene as? UIWindowScene else { return }
+        
+        let window = UIWindow(windowScene: windowScene)
+        
+        Task {
+            let screen = await CoreDataManager.shared.fetchLastViewedScreen()
+            
+            let exchangeRateVM = ExchangeRateViewModel()
+            let exchangeRateVC = ExchangeRateViewController(viewModel: exchangeRateVM)
+            let nav = UINavigationController(rootViewController: exchangeRateVC)
+            
+            switch screen {
+            case .exchangeRate:
+                self.window = window
+                window.rootViewController = nav
+                window.makeKeyAndVisible()
+            case .calculator(let currencyCode):
+                let entities = await CoreDataManager.shared.fetchExchangeRates()
+                let exchangeRateInfos = [ExchangeRateInfo].fromEntity(entities)
+                
+                guard let targetInfo = exchangeRateInfos.first(where: { $0.currencyCode == currencyCode }) else { break }
+                
+                let calculatorVM = CalculatorViewModel(exchangeRate: targetInfo)
+                let calculatorVC = CalculatorViewController(viewModel: calculatorVM)
+                
+                self.window = window
+                window.rootViewController = nav
+                window.makeKeyAndVisible()
+                try? await Task.sleep(nanoseconds: 400_000_000) // 0.4초 뒤 push
+                nav.pushViewController(calculatorVC, animated: true)
+            }
+        }
     }
-
+    
     func sceneDidDisconnect(_ scene: UIScene) {
         // Called as the scene is being released by the system.
         // This occurs shortly after the scene enters the background, or when its session is discarded.
@@ -44,10 +69,19 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     }
 
     func sceneDidEnterBackground(_ scene: UIScene) {
-        // Called as the scene transitions from the foreground to the background.
-        // Use this method to save data, release shared resources, and store enough scene-specific state information
-        // to restore the scene back to its current state.
-        Task { await CoreDataManager.shared.saveContext() }
+        guard let root = window?.rootViewController as? UINavigationController else { return }
+        
+        let screen: LastViewedScreen
+        
+        if let calculatorVC = root.topViewController as? CalculatorViewController {
+            screen = .calculator(currencyCode: calculatorVC.currencyCode)
+        } else {
+            screen = .exchangeRate
+        }
+        
+        Task {
+            await CoreDataManager.shared.saveLastViewedScreen(screen)
+        }
     }
 }
 

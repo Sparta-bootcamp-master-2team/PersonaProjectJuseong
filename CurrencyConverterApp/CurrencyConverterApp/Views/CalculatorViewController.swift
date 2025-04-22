@@ -14,6 +14,11 @@ final class CalculatorViewController: UIViewController {
     
     private let viewModel: CalculatorViewModel
     
+    /// 마지막에 본 화면을 저장할 때 사용할 currencyCode
+    var currencyCode: String {
+        return viewModel.exchangeRate.currencyCode
+    }
+    
     // MARK: - UI Components
     
     private lazy var labelStackView: UIStackView = {

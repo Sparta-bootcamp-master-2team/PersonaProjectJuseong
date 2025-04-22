@@ -87,8 +87,8 @@ final class ExchangeRateCell: UITableViewCell {
     
     /// 셀의 UI 구성 및 초기화
     private func setupUI() {
-        self.backgroundColor = .clear
-        self.contentView.backgroundColor = .clear
+        self.backgroundColor = .secondarySystemBackground
+        self.contentView.backgroundColor = .secondarySystemBackground
         self.selectionStyle = .none
         setupConstraints()
     }
