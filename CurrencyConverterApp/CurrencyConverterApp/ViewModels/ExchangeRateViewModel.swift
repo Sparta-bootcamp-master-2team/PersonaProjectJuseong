@@ -44,6 +44,8 @@ final class ExchangeRateViewModel: ViewModelProtocol {
     }
     
     private let fetchExchangeRateUseCase: FetchExchangeRateUseCase
+    private let toggleFavoriteUseCase: ToggleFavoriteUseCase
+    
     private var allExchangeRates: [ExchangeRateInfo] = []
     
     
@@ -52,8 +54,12 @@ final class ExchangeRateViewModel: ViewModelProtocol {
 
     // MARK: - Initializer
 
-    init(fetchExchangeRateUseCase: FetchExchangeRateUseCase) {
+    init(
+        fetchExchangeRateUseCase: FetchExchangeRateUseCase,
+        toggleFavoriteUseCase: ToggleFavoriteUseCase
+    ) {
         self.fetchExchangeRateUseCase = fetchExchangeRateUseCase
+        self.toggleFavoriteUseCase = toggleFavoriteUseCase
         self.state = .exchangeRates([])
         bindAction()
     }
@@ -97,12 +103,9 @@ final class ExchangeRateViewModel: ViewModelProtocol {
 
     private func handleFavoriteToggle(for currencyCode: String) {
         Task {
-            await CoreDataManager.shared.toggleFavorite(for: currencyCode)
-            let updatedEntities = await CoreDataManager.shared.fetchExchangeRates()
-            let updatedRates = [ExchangeRateInfo].fromEntity(updatedEntities)
-            
-            self.allExchangeRates = updatedRates
-            self.state = .exchangeRates(updatedRates)
+            let updated = await toggleFavoriteUseCase.execute(for: currencyCode)
+            self.allExchangeRates = updated
+            self.state = .exchangeRates(updated)
         }
     }
 

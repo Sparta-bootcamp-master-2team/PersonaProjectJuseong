@@ -52,4 +52,8 @@ final class ExchangeRateRepositoryImpl: ExchangeRateRepository {
             return .failure(error)
         }
     }
+    
+    func toggleFavorite(for currencyCode: String) async {
+          await CoreDataManager.shared.toggleFavorite(for: currencyCode)
+      }
 }
