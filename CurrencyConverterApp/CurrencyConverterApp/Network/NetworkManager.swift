@@ -30,7 +30,7 @@ final class NetworkManager {
     /// 서버에서 최신 환율 데이터를 가져오는 비동기 메서드
     /// - Returns: `ExchangeRateInfo` 배열
     /// - Throws: `NetworkError`에 정의된 에러
-    func fetchExchangeRateData() async throws -> ExchangeRateResponse {
+    func fetchExchangeRateData() async throws -> ExchangeRatesDTO {
         // URL 생성
         guard let url = URL(string: "https://open.er-api.com/v6/latest/USD") else {
             throw NetworkError.invalidURL
@@ -50,10 +50,6 @@ final class NetworkManager {
             throw NetworkError.decodingError
         }
         
-        return ExchangeRateResponse(
-            exchangeRateList: .fromDTO(dto.rates),
-            timeLastUpdateUnix: dto.timeLastUpdateUnix,
-            timeNextUpdateUnix: dto.timeNextUpdateUnix
-        )
+        return dto
     }
 }
