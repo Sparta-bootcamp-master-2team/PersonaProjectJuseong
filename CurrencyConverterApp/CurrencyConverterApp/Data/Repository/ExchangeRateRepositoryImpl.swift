@@ -22,11 +22,10 @@ final class ExchangeRateRepositoryImpl: ExchangeRateRepository {
         do {
             let dto = try await NetworkManager.shared.fetchExchangeRateData()
             let list = [ExchangeRateInfo].fromDTO(dto.rates)
-            let last = Int(dto.timeLastUpdateUnix)
             let next = Int(dto.timeNextUpdateUnix)
 
             await CoreDataManager.shared.saveExchangeRates(list)
-            await CoreDataManager.shared.saveTimeStamp(last: last, next: next)
+            await CoreDataManager.shared.saveTimeStamp(next: next)
             return .success(list)
         } catch {
             return .failure(error)
@@ -37,14 +36,13 @@ final class ExchangeRateRepositoryImpl: ExchangeRateRepository {
         do {
             let dto = try await NetworkManager.shared.fetchExchangeRateData()
             let updatedList = [ExchangeRateInfo].fromDTO(dto.rates)
-            let last = Int(dto.timeLastUpdateUnix)
             let next = Int(dto.timeNextUpdateUnix)
 
             let rateMap = Dictionary(uniqueKeysWithValues: updatedList.map { ($0.currencyCode, $0.rate) })
             await CoreDataManager.shared.updateExchangeRates(rateMap)
 
             await CoreDataManager.shared.deleteTimeStamp()
-            await CoreDataManager.shared.saveTimeStamp(last: last, next: next)
+            await CoreDataManager.shared.saveTimeStamp(next: next)
 
             let refreshed = await CoreDataManager.shared.fetchExchangeRates()
             return .success([ExchangeRateInfo].fromEntity(refreshed))

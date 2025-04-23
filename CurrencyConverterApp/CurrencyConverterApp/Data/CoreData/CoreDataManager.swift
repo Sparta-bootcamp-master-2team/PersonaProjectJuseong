@@ -91,10 +91,9 @@ actor CoreDataManager {
 
     // MARK: - 타임스탬프 저장/조회
     
-    func saveTimeStamp(last: Int, next: Int) async {
+    func saveTimeStamp(next: Int) async {
         await context.perform {
             let entity = ExchangeRateTimeStampEntity(context: self.context)
-            entity.timeLastUpdateUnix = Int64(last)
             entity.timeNextUpdateUnix = Int64(next)
             self.saveContext()
         }
@@ -130,17 +129,6 @@ actor CoreDataManager {
             target.isFavorite.toggle()
 
             self.saveContext()
-        }
-    }
-
-    // MARK: - 컨텍스트 저장
-
-    func saveContext() {
-        guard context.hasChanges else { return }
-        do {
-            try context.save()
-        } catch {
-            print("❌ 컨텍스트 저장 실패: \(error.localizedDescription)")
         }
     }
     
@@ -180,6 +168,17 @@ actor CoreDataManager {
             } else {
                 return .exchangeRate
             }
+        }
+    }
+    
+    // MARK: - 컨텍스트 저장
+
+    func saveContext() {
+        guard context.hasChanges else { return }
+        do {
+            try context.save()
+        } catch {
+            print("❌ 컨텍스트 저장 실패: \(error.localizedDescription)")
         }
     }
 }
