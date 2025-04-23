@@ -7,26 +7,26 @@
 
 import Foundation
 
-// MARK: - State
-
-/// ExchangeRate 화면에서 사용하는 상태 정의
-enum ExchangeRateState {
-    case exchangeRates([ExchangeRateInfo])
-    case networkError(Error)
-}
-
-// MARK: - Action
-
-/// ExchangeRate 화면에서 발생 가능한 액션 정의
-enum ExchangeRateAction {
-    case fetch              // 환율 데이터 전체 로드
-    case applyFilter(String)    // 검색어를 통한 필터링
-    case favorite(String)
-}
-
 // MARK: - ViewModel
 
 final class ExchangeRateViewModel: ViewModelProtocol {
+    
+    // MARK: - State
+
+    /// ExchangeRate 화면에서 사용하는 상태 정의
+    enum ExchangeRateState {
+        case exchangeRates([ExchangeRateInfo])
+        case networkError(Error)
+    }
+
+    // MARK: - Action
+
+    /// ExchangeRate 화면에서 발생 가능한 액션 정의
+    enum ExchangeRateAction {
+        case fetch              // 환율 데이터 전체 로드
+        case applyFilter(String)    // 검색어를 통한 필터링
+        case favorite(String)
+    }
 
     // MARK: - Typealias
 
@@ -43,14 +43,17 @@ final class ExchangeRateViewModel: ViewModelProtocol {
         }
     }
     
+    private let fetchExchangeRateUseCase: FetchExchangeRateUseCase
     private var allExchangeRates: [ExchangeRateInfo] = []
+    
     
     var action: ((Action) -> Void)?
     var onStateChange: ((State) -> Void)?
 
     // MARK: - Initializer
 
-    init() {
+    init(fetchExchangeRateUseCase: FetchExchangeRateUseCase) {
+        self.fetchExchangeRateUseCase = fetchExchangeRateUseCase
         self.state = .exchangeRates([])
         bindAction()
     }
@@ -76,31 +79,8 @@ final class ExchangeRateViewModel: ViewModelProtocol {
 
     private func performFetch() {
         Task {
-            // 현재 시간과 다음 업데이트 시간을 가져옴
-            let nextUpdateUnix = await CoreDataManager.shared.fetchNextUpdateTime()
-            let now = Int64(Date().timeIntervalSince1970)
+            let result = await fetchExchangeRateUseCase.execute()
             
-            let result: Result<[ExchangeRateInfo], Error>
-            
-            // nextUpdateUnix가 nil이 아닌 경우 → 이미 캐시된 데이터가 있음
-            if let nextUpdateUnix {
-                if now >= nextUpdateUnix {
-                    // 업데이트 시간이 지났으므로 네트워크에서 최신 환율만 갱신
-                    print("업데이트")
-                    result = await updateRatesOnly()
-                } else {
-                    // 캐시된 데이터가 아직 유효하므로 CoreData에서 데이터만 불러옴
-                    print("코어 데이터")
-                    let cachedEntities = await CoreDataManager.shared.fetchExchangeRates()
-                    result = .success([ExchangeRateInfo].fromEntity(cachedEntities))
-                }
-            } else {
-                print("최초 실행")
-                // nextUpdateUnix가 nil인 경우 → 앱 최초 실행이거나 캐시 없음
-                result = await fetchAndSaveAll()
-            }
-
-            // 결과에 따라 ViewModel 상태를 업데이트
             switch result {
             case .success(let list):
                 // 성공 시 전체 리스트 저장 및 상태 업데이트
@@ -112,41 +92,7 @@ final class ExchangeRateViewModel: ViewModelProtocol {
             }
         }
     }
-
-
-    private func fetchAndSaveAll() async -> Result<[ExchangeRateInfo], Error> {
-        do {
-            let response = try await NetworkManager.shared.fetchExchangeRateData()
-            await CoreDataManager.shared.saveExchangeRates(response.exchangeRateList)
-            await CoreDataManager.shared.saveTimeStamp(
-                last: response.timeLastUpdateUnix,
-                next: response.timeNextUpdateUnix
-            )
-            return .success(response.exchangeRateList)
-        } catch {
-            return .failure(error)
-        }
-    }
-
-    private func updateRatesOnly() async -> Result<[ExchangeRateInfo], Error> {
-        do {
-            let response = try await NetworkManager.shared.fetchExchangeRateData()
-            let rateMap = Dictionary(uniqueKeysWithValues: response.exchangeRateList.map { ($0.currencyCode, $0.rate) })
-            
-            await CoreDataManager.shared.updateExchangeRates(rateMap)
-            await CoreDataManager.shared.deleteTimeStamp()
-            await CoreDataManager.shared.saveTimeStamp(
-                last: response.timeLastUpdateUnix,
-                next: response.timeNextUpdateUnix
-            )
-
-            let updatedEntities = await CoreDataManager.shared.fetchExchangeRates()
-            return .success([ExchangeRateInfo].fromEntity(updatedEntities))
-        } catch {
-            return .failure(error)
-        }
-    }
-
+    
     // MARK: - Favorite Handle
 
     private func handleFavoriteToggle(for currencyCode: String) {

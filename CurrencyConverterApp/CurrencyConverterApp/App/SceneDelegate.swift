@@ -19,7 +19,9 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         Task {
             let screen = await CoreDataManager.shared.fetchLastViewedScreen()
             
-            let exchangeRateVM = ExchangeRateViewModel()
+            let exchangeRateRepository = ExchangeRateRepository()
+            let fetchExchangeRateUseCase = FetchExchangeRateUseCase(exchangeRateRepository: exchangeRateRepository)
+            let exchangeRateVM = ExchangeRateViewModel(fetchExchangeRateUseCase: fetchExchangeRateUseCase)
             let exchangeRateVC = ExchangeRateViewController(viewModel: exchangeRateVM)
             let nav = UINavigationController(rootViewController: exchangeRateVC)
             
