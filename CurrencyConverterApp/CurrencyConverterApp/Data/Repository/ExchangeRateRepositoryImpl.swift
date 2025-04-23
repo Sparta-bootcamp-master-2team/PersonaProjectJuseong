@@ -8,24 +8,32 @@
 import Foundation
 
 final class ExchangeRateRepositoryImpl: ExchangeRateRepository {
+    
+    private let dataManager: CoreDataManager
+    private let networkManager: NetworkManager
+    
+    init(dataManager: CoreDataManager, networkManager: NetworkManager) {
+        self.dataManager = dataManager
+        self.networkManager = networkManager
+    }
 
     func fetchLocalExchangeRates() async -> [ExchangeRateInfo] {
-        let entities = await CoreDataManager.shared.fetchExchangeRates()
+        let entities = await dataManager.fetchExchangeRates()
         return [ExchangeRateInfo].fromEntity(entities)
     }
 
     func fetchNextUpdateTime() async -> Int? {
-        await CoreDataManager.shared.fetchNextUpdateTime()
+        await dataManager.fetchNextUpdateTime()
     }
 
     func fetchAndSaveAll() async -> Result<[ExchangeRateInfo], Error> {
         do {
-            let dto = try await NetworkManager.shared.fetchExchangeRateData()
+            let dto = try await networkManager.fetchExchangeRateData()
             let list = [ExchangeRateInfo].fromDTO(dto.rates)
             let next = Int(dto.timeNextUpdateUnix)
 
-            await CoreDataManager.shared.saveExchangeRates(list)
-            await CoreDataManager.shared.saveTimeStamp(next: next)
+            await dataManager.saveExchangeRates(list)
+            await dataManager.saveTimeStamp(next: next)
             return .success(list)
         } catch {
             return .failure(error)
@@ -34,17 +42,17 @@ final class ExchangeRateRepositoryImpl: ExchangeRateRepository {
 
     func updateRatesOnly() async -> Result<[ExchangeRateInfo], Error> {
         do {
-            let dto = try await NetworkManager.shared.fetchExchangeRateData()
+            let dto = try await networkManager.fetchExchangeRateData()
             let updatedList = [ExchangeRateInfo].fromDTO(dto.rates)
             let next = Int(dto.timeNextUpdateUnix)
 
             let rateMap = Dictionary(uniqueKeysWithValues: updatedList.map { ($0.currencyCode, $0.rate) })
-            await CoreDataManager.shared.updateExchangeRates(rateMap)
+            await dataManager.updateExchangeRates(rateMap)
 
-            await CoreDataManager.shared.deleteTimeStamp()
-            await CoreDataManager.shared.saveTimeStamp(next: next)
+            await dataManager.deleteTimeStamp()
+            await dataManager.saveTimeStamp(next: next)
 
-            let refreshed = await CoreDataManager.shared.fetchExchangeRates()
+            let refreshed = await dataManager.fetchExchangeRates()
             return .success([ExchangeRateInfo].fromEntity(refreshed))
         } catch {
             return .failure(error)
@@ -52,6 +60,6 @@ final class ExchangeRateRepositoryImpl: ExchangeRateRepository {
     }
     
     func toggleFavorite(for currencyCode: String) async {
-          await CoreDataManager.shared.toggleFavorite(for: currencyCode)
+          await dataManager.toggleFavorite(for: currencyCode)
       }
 }

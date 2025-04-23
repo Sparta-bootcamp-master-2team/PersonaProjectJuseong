@@ -19,14 +19,7 @@ enum NetworkError: Error {
 // MARK: - NetworkManager
 
 /// 환율 데이터를 서버로부터 비동기적으로 가져오는 싱글톤 네트워크 매니저
-final class NetworkManager {
-    
-    /// 싱글톤 인스턴스
-    static let shared = NetworkManager()
-    
-    /// 외부에서 인스턴스 생성을 막기 위한 private init
-    private init() {}
-    
+final class NetworkManager {    
     /// 서버에서 최신 환율 데이터를 가져오는 비동기 메서드
     /// - Returns: `ExchangeRateInfo` 배열
     /// - Throws: `NetworkError`에 정의된 에러

@@ -14,10 +14,6 @@ enum LastViewedScreen {
 
 actor CoreDataManager {
 
-    // MARK: - 싱글톤 인스턴스
-
-    nonisolated static let shared = CoreDataManager()
-
     // MARK: - Core Data Context
 
     private let context: NSManagedObjectContext
@@ -134,7 +130,7 @@ actor CoreDataManager {
     
     // MARK: - 마지막 화면 상태 저장/복원
     
-    func saveLastViewedScreen(_ screen: LastViewedScreen) async {
+    func saveLastViewedScreen(_ screen: LastViewedScreen) {
         context.performAndWait {
             // 기존에 저장된 항목 삭제
             let request: NSFetchRequest<NSFetchRequestResult> = LastViewedScreenEntity.fetchRequest()
