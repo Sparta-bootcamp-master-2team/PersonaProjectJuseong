@@ -40,6 +40,24 @@
 
 <br>
 
+## 메모리 안정성 검증 (Memory Debugging)
+
+환율 계산기 앱은 **Xcode의 Memory Graph Debugger**를 활용하여 화면 간 전환 및 반복적인 사용자 상호작용 이후에도 **메모리 누수 없이 안정적으로 객체가 해제되는 구조**임을 검증했다.
+
+- **Memory Leak 및 순환 참조 확인**  
+  Xcode의 **Memory Graph Debugger**를 통해 `ViewController`, `ViewModel`, `Coordinator` 간의 참조 관계를 시각적으로 분석하였다.
+- **Memory Leak 디버깅**
+  Leaks Instrument를 통해 ViewController 순환 참조나 retain cycle 없이 해제됨을 확인했다.
+
+### 디버깅 화면
+#### Leaks Instrument
+<img src="https://github.com/user-attachments/assets/3472b6ea-8af8-4849-af0f-6939f12ef30b" width="80%">
+
+#### Memory Graph Debugge
+<img src="https://github.com/user-attachments/assets/f13345eb-4ae4-48f8-914c-afaedd369601" width="80%">
+
+<br>
+
 ## 📁 프로젝트 구조
 
 ```
